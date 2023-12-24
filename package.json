@@ -1,12 +1,18 @@
 {
     "name": "quis",
     "version": "1.0.0",
-    "description": "String-based DSL for searching complex data collections",
+    "description": "Lightweight string-based DSL for story sorting",
     "main": "index.js",
     "scripts": {
         "test": "mocha",
+<<<<<<< HEAD
         "compile": "peggy -o build/quis.js ./src/dsl.pegjs",
         "lint": "eslint ./src --fix"
+=======
+        "compile": "peggy -o ./build/quis.js ./src/dsl.pegjs",
+        "build": "npx webpack",
+        "lint": "eslint ./test --fix"
+>>>>>>> a822d9af3e8627e97e06dbbcb621b85238de9d8b
     },
     "author": "Dan Cox",
     "license": "MIT",
@@ -18,8 +24,16 @@
         "eslint": "^8.56.0",
         "eslint-config-standard": "^17.1.0",
         "eslint-plugin-import": "^2.29.1",
+<<<<<<< HEAD
         "eslint-plugin-n": "^16.5.0",
         "eslint-plugin-promise": "^6.1.1",
         "mocha": "*"
+=======
+        "eslint-plugin-mocha": "^10.2.0",
+        "eslint-plugin-n": "^16.4.0",
+        "eslint-plugin-promise": "^6.1.1",
+        "mocha": "*",
+        "webpack-cli": "^5.1.4"
+>>>>>>> a822d9af3e8627e97e06dbbcb621b85238de9d8b
     }
 }
