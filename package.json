@@ -1,28 +1,30 @@
 {
-    "name": "quis",
-    "version": "1.0.0",
-    "description": "Lightweight string-based DSL for story sorting",
-    "main": "index.js",
-    "scripts": {
-        "test": "mocha",
-        "compile": "peggy -o ./build/quis.js ./src/dsl.pegjs",
-        "build": "npx webpack",
-        "lint": "eslint ./test --fix"
-    },
-    "author": "Dan Cox",
-    "license": "MIT",
-    "dependencies": {
-        "peggy": "^3.0.2"
-    },
-    "devDependencies": {
-        "chai": "*",
-        "eslint": "^8.56.0",
-        "eslint-config-standard": "^17.1.0",
-        "eslint-plugin-import": "^2.29.1",
-        "eslint-plugin-mocha": "^10.2.0",
-        "eslint-plugin-n": "^16.6.0",
-        "eslint-plugin-promise": "^6.1.1",
-        "mocha": "*",
-        "webpack-cli": "^5.1.4"
-    }
+  "name": "quis",
+  "version": "1.0.1",
+  "description": "A simple DSL for data sorting and filtering",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "compile": "peggy -o ./build/quis.cjs ./src/dsl.pegjs",
+    "build": "esbuild ./src/index.js --bundle --platform=node --target=node10.4",
+    "build:web": "esbuild ./src/web-index.js --minify --bundle --platform=browser --target=es6 --outfile=./build/quis.min.js",
+    "lint": "eslint ./test --fix"
+  },
+  "author": "Dan Cox",
+  "license": "MIT",
+  "dependencies": {
+    "peggy": "^3.0.2"
+  },
+  "devDependencies": {
+    "chai": "^5.0.0",
+    "esbuild": "0.19.11",
+    "eslint": "^8.56.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-mocha": "^10.2.0",
+    "eslint-plugin-n": "^16.6.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "mocha": "*"
+  },
+  "type": "module"
 }

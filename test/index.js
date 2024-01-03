@@ -1,11 +1,12 @@
-const expect = require('chai').expect;
-const peggy = require('peggy');
-const fs = require('fs');
+import { expect } from 'chai';
+import peggy from 'peggy';
+import { readFileSync } from 'fs';
+const { generate } = peggy;
 
 // Read grammar.
-const grammar = fs.readFileSync('./src/dsl.pegjs', 'utf-8');
+const grammar = readFileSync('./src/dsl.pegjs', 'utf-8');
 // Create parser.
-const parser = peggy.generate(grammar);
+const parser = generate(grammar);
 
 describe('Grammar', function () {
   describe('Conditional Expressions', function () {

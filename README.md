@@ -1,6 +1,6 @@
 # Quis
 
-*Lightweight (~11 KiB) story sorting DSL.*
+*Lightweight (~12 KiB) data sorting DSL.*
 
 Based on the Latin word *quis*, this project, like its origin, implies a question of existing complex data. Quis provides a domain specific language (DSL) for performing comparisons on values within a collection using string-based comparisons.
 
@@ -24,18 +24,18 @@ To be as lightweight as possible, Quis does not contain state or database functi
 Based on the underlining PEG compilation process, Quis expects a *values()* callback function returning values based on the passed-in variable name. For example, a simple collection returning specific values based on labels might be the following:
 
 ```javascript
-const values = (label) => {
+const values = (name) => {
 
     // Establish a default value. 
     let result = null;
 
     // Return value based on 'example'.
-    if (label === 'example') {
+    if (name === 'example') {
         result = 2;
     }
     
     // Return value based on 'example2'.
-    if (label === 'example2') {
+    if (name === 'example2') {
         result = 5;
     }
 
@@ -43,11 +43,6 @@ const values = (label) => {
     return result;
 };
 ```
-
-## Build
-
-- `build/quis.js (40.1 KiB)`
-- `build/quis.min.js (10.8 KiB)`
 
 ## Example
 

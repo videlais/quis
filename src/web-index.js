@@ -1,7 +1,7 @@
 // Import parse() function.
-const { parse } = require('../build/quis.js');
+import quis from '../build/quis.cjs';
 
 // Save a global property and function.
-window.Quis = {
-    parse: parse
+window.quis = {
+    parse: quis.parse
 };
