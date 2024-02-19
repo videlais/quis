@@ -13,7 +13,7 @@
   "author": "Dan Cox",
   "license": "MIT",
   "dependencies": {
-    "peggy": "^3.0.2"
+    "peggy": "^4.0.0"
   },
   "devDependencies": {
     "chai": "^5.0.0",
