@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "chai": "^5.0.0",
-    "esbuild": "0.20.1",
+    "esbuild": "0.20.2",
     "eslint": "^8.56.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.29.1",
