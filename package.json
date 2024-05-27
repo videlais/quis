@@ -8,7 +8,8 @@
     "compile": "peggy -o ./build/quis.cjs ./src/dsl.pegjs",
     "build": "esbuild ./src/index.js --bundle --platform=node --target=node10.4",
     "build:web": "esbuild ./src/web-index.js --minify --bundle --platform=browser --target=es6 --outfile=./build/quis.min.js",
-    "lint": "eslint ./test --fix"
+    "lint": "eslint ./test --fix",
+    "all": "npm run lint && npm run test && npm run compile && npm run build && npm run build:web"
   },
   "author": "Dan Cox",
   "license": "MIT",
@@ -16,14 +17,12 @@
     "peggy": "^4.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.3.0",
     "chai": "^5.0.0",
     "esbuild": "0.21.4",
-    "eslint": "^8.56.0",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-mocha": "^10.2.0",
-    "eslint-plugin-n": "^16.6.1",
-    "eslint-plugin-promise": "^6.1.1",
+    "eslint": "^9.3.0",
+    "eslint-plugin-mocha": "^10.4.3",
+    "globals": "^15.3.0",
     "mocha": "*"
   },
   "type": "module"
