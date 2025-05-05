@@ -14,7 +14,7 @@
   "author": "Dan Cox",
   "license": "MIT",
   "dependencies": {
-    "peggy": "^4.0.0"
+    "peggy": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.3.0",
