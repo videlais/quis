@@ -19,7 +19,7 @@
   "devDependencies": {
     "@eslint/js": "^9.3.0",
     "chai": "^5.0.0",
-    "esbuild": "0.25.4",
+    "esbuild": "0.25.5",
     "eslint": "^9.3.0",
     "eslint-plugin-mocha": "^10.4.3",
     "globals": "^16.0.0",
