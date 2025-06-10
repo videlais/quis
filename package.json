@@ -1,12 +1,29 @@
 {
   "name": "quis",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A simple DSL for data sorting and filtering",
-  "main": "index.js",
+  "main": "build/quis.cjs",
+  "module": "build/quis.js",
+  "browser": "build/quis.min.js",
+  "files": [
+    "build",
+    "src",
+    "test"
+  ],
+  "keywords": [
+    "DSL",
+    "data",
+    "sorting",
+    "filtering"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/videlais/quis"
+  },
   "scripts": {
     "test": "mocha",
     "compile": "peggy -o ./build/quis.cjs ./src/dsl.pegjs",
-    "build": "esbuild ./src/index.js --bundle --platform=node --target=node10.4",
+    "build": "esbuild ./src/index.js --bundle --minify --platform=node --target=es2020 --outfile=./build/quis.js",
     "build:web": "esbuild ./src/web-index.js --minify --bundle --platform=browser --target=es6 --outfile=./build/quis.min.js",
     "lint": "eslint ./test --fix",
     "all": "npm run lint && npm run test && npm run compile && npm run build && npm run build:web"
@@ -17,13 +34,15 @@
     "peggy": "^5.0.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.3.0",
+    "@eslint/js": "^9.28.0",
     "chai": "^5.0.0",
     "esbuild": "0.25.5",
-    "eslint": "^9.3.0",
-    "eslint-plugin-mocha": "^10.4.3",
-    "globals": "^16.0.0",
-    "mocha": "*"
+    "eslint": "^9.28.0",
+    "eslint-plugin-mocha": "^11.1.0",
+    "globals": "^16.2.0",
+    "mocha": "*",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.34.0"
   },
   "type": "module"
 }

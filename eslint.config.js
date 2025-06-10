@@ -1,16 +1,11 @@
+import js from "@eslint/js";
 import globals from "globals";
-import pluginJs from "@eslint/js";
-import mochaPlugin from 'eslint-plugin-mocha';
+import tseslint from "typescript-eslint";
+import { defineConfig } from "eslint/config";
+import mochaPlugin from "eslint-plugin-mocha";
 
-export default [
-  {
-    languageOptions: { 
-        globals: {
-            ...globals.browser, 
-            ...globals.node
-        } 
-    }
-},
-  pluginJs.configs.recommended,
-  mochaPlugin.configs.flat.recommended
-];
+export default defineConfig([
+  { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], plugins: { js }, extends: ["js/recommended",  mochaPlugin.configs.recommended] },
+  { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], languageOptions: { globals: {...globals.browser, ...globals.node} } },
+  tseslint.configs.recommended,
+]);
