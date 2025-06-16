@@ -34,13 +34,13 @@
     "peggy": "^5.0.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.28.0",
+    "@eslint/js": "^9.29.0",
     "chai": "^5.0.0",
     "esbuild": "0.25.5",
-    "eslint": "^9.28.0",
+    "eslint": "^9.29.0",
     "eslint-plugin-mocha": "^11.1.0",
     "globals": "^16.2.0",
-    "mocha": "*",
+    "mocha": "^11.6.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.34.0"
   },
