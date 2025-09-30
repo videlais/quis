@@ -268,6 +268,123 @@ describe('Grammar', function () {
     });
   });
 
+  describe('Complex Boolean Expressions', function () {
+    let options;
+
+    beforeEach(function () {
+      options = {
+        values: (label) => {
+          const gameState = {
+            user: {
+              name: 'alice',
+              health: 85,
+              level: 5,
+              magic: 30
+            },
+            inventory: {
+              gold: 150,
+              sword: true,
+              potion: false
+            },
+            flags: {
+              quest_complete: true,
+              boss_defeated: false
+            }
+          };
+
+          const parts = label.split('.');
+          let current = gameState;
+          
+          for (const part of parts) {
+            if (current && typeof current === 'object' && part in current) {
+              current = current[part];
+            } else {
+              return null;
+            }
+          }
+          
+          return current;
+        }
+      };
+    });
+
+    describe('Symbolic Boolean Operators', function () {
+      it('Should handle && (symbolic AND)', function () {
+        expect(parser.parse('$user.health > 50 && $user.level >= 5', options)).to.equal(true);
+      });
+
+      it('Should handle || (symbolic OR)', function () {
+        expect(parser.parse('$user.health < 20 || $user.magic > 25', options)).to.equal(true);
+      });
+
+      it('Should handle complex && chains', function () {
+        expect(parser.parse('$user.name == "alice" && $user.health > 50 && $user.level >= 3', options)).to.equal(true);
+      });
+
+      it('Should handle complex || chains', function () {
+        expect(parser.parse('$user.health < 10 || $user.magic < 5 || $inventory.gold >= 100', options)).to.equal(true);
+      });
+
+      it('Should return false for failing && expressions', function () {
+        expect(parser.parse('$user.health < 50 && $user.level < 3', options)).to.equal(false);
+      });
+    });
+
+    describe('Word Boolean Operators', function () {
+      it('Should handle AND (uppercase word)', function () {
+        expect(parser.parse('$user.health > 50 AND $user.level >= 5', options)).to.equal(true);
+      });
+
+      it('Should handle OR (uppercase word)', function () {
+        expect(parser.parse('$user.health < 20 OR $user.magic > 25', options)).to.equal(true);
+      });
+
+      it('Should handle and (lowercase word)', function () {
+        expect(parser.parse('$user.health > 50 and $user.level >= 5', options)).to.equal(true);
+      });
+
+      it('Should handle or (lowercase word)', function () {
+        expect(parser.parse('$user.health < 20 or $user.magic > 25', options)).to.equal(true);
+      });
+    });
+
+    describe('Mixed Operator Precedence', function () {
+      it('Should handle mixed AND/OR with correct precedence', function () {
+        // Should evaluate as: (health > 80 AND level >= 5) OR gold >= 200
+        expect(parser.parse('$user.health > 80 && $user.level >= 5 || $inventory.gold >= 200', options)).to.equal(true);
+      });
+
+      it('Should handle mixed OR/AND with correct precedence', function () {
+        // Should evaluate as: health < 50 OR (level >= 5 AND has sword)
+        expect(parser.parse('$user.health < 50 || $user.level >= 5 && $inventory.sword == true', options)).to.equal(true);
+      });
+    });
+
+    describe('Boolean Operators with Key-Value Access', function () {
+      it('Should work with dot notation and &&', function () {
+        expect(parser.parse('$user.name == "alice" && $user.health > 80', options)).to.equal(true);
+      });
+
+      it('Should work with bracket notation and ||', function () {
+        expect(parser.parse('$inventory["potion"] == true || $flags["quest_complete"] == true', options)).to.equal(true);
+      });
+
+      it('Should work with mixed notation and operators', function () {
+        expect(parser.parse('$user.level >= 5 AND $inventory["sword"] == true', options)).to.equal(true);
+      });
+    });
+
+    describe('Negation with Boolean Operators', function () {
+      it('Should handle negation with &&', function () {
+        expect(parser.parse('!$inventory.potion && $user.health > 50', options)).to.equal(true);
+      });
+
+      it('Should handle negation with ||', function () {
+        expect(parser.parse('!$flags.boss_defeated || $user.level >= 5', options)).to.equal(true);
+      });
+    });
+  });
+
   describe('Key-Value Expressions', function () {
     let options;
 

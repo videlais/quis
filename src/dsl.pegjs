@@ -1,5 +1,50 @@
 Start
-  = ConditionalOperators
+  = OrExpression
+
+// OR has lowest precedence
+OrExpression
+  = left:AndExpression right:(OrOperator AndExpression)* {
+      return right.reduce((acc, curr) => acc || curr[1], left);
+    }
+
+// AND has higher precedence than OR
+AndExpression
+  = left:ComparisonExpression right:(AndOperator ComparisonExpression)* {
+      return right.reduce((acc, curr) => !!acc && !!curr[1], left);
+    }
+
+// Comparison expressions have highest precedence  
+ComparisonExpression
+  = left:Value operator:(Shorthand_Inequality/GreaterThanOrEqual/Shorthand_GreaterThanOrEqual/LessThanOrEqual/Shorthand_LessThanOrEqual/LessThan/Shorthand_LessThan/GreaterThan/Shorthand_GreaterThan/Equality/Shorthand_Equality/Inequality) right:Value {
+      // Handle different operator formats
+      let opText;
+      if (Array.isArray(operator)) {
+        opText = operator.join('').trim();
+      } else if (typeof operator === 'string') {
+        opText = operator.trim();
+      } else {
+        opText = String(operator).trim();
+      }
+      
+      if (opText === '>=' || opText === 'gte') return left >= right;
+      if (opText === '<=' || opText === 'lte') return left <= right;  
+      if (opText === '<' || opText === 'lt') return left < right;
+      if (opText === '>' || opText === 'gt') return left > right;
+      if (opText === '!=' || opText.includes('is not')) return left != right;
+      if (opText === '==' || opText === 'is') return left == right;
+      return false;
+    }
+  / NotExpression
+  / ParenthesizedExpression
+  / Value
+
+// Negation expression
+NotExpression
+  = Not expr:ComparisonExpression { return !expr; }
+
+// Parenthesized expressions for grouping
+ParenthesizedExpression
+  = LeftParentheses expr:OrExpression RightParentheses { return expr; }
 
 Value
     = val1:Number { return val1; }
@@ -7,19 +52,6 @@ Value
     / val1:GetKeyValue { return val1; }
     / val1:GetVariable { return val1; }
     / val1:NullValue { return val1; }
-    / BooleanValue
-
-ConditionalOperators
-    = val1:Value (GreaterThanOrEqual/Shorthand_GreaterThanOrEqual) val2:Value { return val1 >= val2; }
-    / val1:Value (LessThanOrEqual/Shorthand_LessThanOrEqual) val2:Value { return val1 <= val2; }
-    / val1:Value (LessThan/Shorthand_LessThan) val2:Value { return val1 < val2; }
-    / val1:Value (GreaterThan/Shorthand_GreaterThan) val2:Value { return val1 > val2; }
-    / val1:Value (Equality/Shorthand_Equality) val2:Value { return val1 == val2; }
-    / val1:Value (Inequality/Shorthand_Inequality) val2:Value { return val1 != val2; }
-    / val1:Value And val2:Value { return !!val1 && !!val2; }
-    / val1:Value Or val2:Value { return !!val1 || !!val2; }
-    / Not val1:BooleanValue { return !val1; }
-    / Not val1:GetVariable { return val1; }
     / BooleanValue
 
 BooleanValue "Boolean Value"
@@ -40,20 +72,24 @@ False "False"                    = "false" Whitespace
 And "and"                        = "and" Whitespace
 Or "or"                          = "or" Whitespace
 Not "Negation"                   = "!" Whitespace
-Inequality "Inequality"          = "!=" Whitespace
+
+/* Boolean Operators */
+AndOperator "And Operator"       = ("&&" / "AND" / "and") Whitespace
+OrOperator "Or Operator"         = ("||" / "OR" / "or") Whitespace
 
 /* Comparison Constants */
-Equality "Equality"                                             = "==" Whitespace
-GreaterThan "Greater-than"                                      = ">" Whitespace
-GreaterThanOrEqual "Greater-than or equal"                      = ">=" Whitespace
-LessThan "Less-than"                                            = "<" Whitespace
-LessThanOrEqual "Less-than or equal"                            = "<=" Whitespace
-Shorthand_Equality "Equality Shorthand"                         = "is" Whitespace
-Shorthand_Inequality "Inequality Shorthand"                     = "is not" Whitespace
-Shorthand_GreaterThan "Greater-than Shorthand"                  = "gt" Whitespace
-Shorthand_LessThan "Less-than Shorthand"                        = "lt" Whitespace
-Shorthand_LessThanOrEqual "Less-than or equal Shorthand"        = "lte" Whitespace
-Shorthand_GreaterThanOrEqual "Greater-than or equal Shorthand"  = "gte" Whitespace
+Equality "Equality"                                             = "==" Whitespace { return "=="; }
+GreaterThan "Greater-than"                                      = ">" Whitespace { return ">"; }
+GreaterThanOrEqual "Greater-than or equal"                      = ">=" Whitespace { return ">="; }
+LessThan "Less-than"                                            = "<" Whitespace { return "<"; }
+LessThanOrEqual "Less-than or equal"                            = "<=" Whitespace { return "<="; }
+Inequality "Inequality"                                         = "!=" Whitespace { return "!="; }
+Shorthand_Inequality "Inequality Shorthand"                     = "is not" Whitespace { return "is not"; }
+Shorthand_Equality "Equality Shorthand"                         = "is" Whitespace { return "is"; }
+Shorthand_GreaterThan "Greater-than Shorthand"                  = "gt" Whitespace { return "gt"; }
+Shorthand_LessThan "Less-than Shorthand"                        = "lt" Whitespace { return "lt"; }
+Shorthand_LessThanOrEqual "Less-than or equal Shorthand"        = "lte" Whitespace { return "lte"; }
+Shorthand_GreaterThanOrEqual "Greater-than or equal Shorthand"  = "gte" Whitespace { return "gte"; }
 
 /* Numeric Constants */
 Digit "Digit"       = [0-9]

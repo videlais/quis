@@ -1,6 +1,6 @@
 # Quis
 
-*Lightweight (~12 KiB) data sorting DSL.*
+*Lightweight (~20 KiB) data sorting DSL.*
 
 Based on the Latin word *quis*, this project, like its origin, implies a question of existing complex data. Quis provides a domain specific language (DSL) for performing comparisons on values within a collection using string-based comparisons.
 
@@ -14,8 +14,20 @@ Quis is designed for story sorting with dynamic narrative structures where compa
 - `<` / `lt` Less than.
 - `<=` / `lte` Less than or equal.
 - `>=` / `gte` Greater than or equal.
-- `and` Boolean AND
-- `or` Boolean OR
+
+## Boolean Operators
+
+- `&&` / `AND` / `and` Boolean AND
+- `||` / `OR` / `or` Boolean OR
+- `!` Boolean NOT (negation)
+
+## Complex Expressions
+
+Quis supports complex boolean expressions with proper operator precedence:
+
+- `$user.health > 50 && $user.level >= 5` - AND has higher precedence
+- `$user.magic < 10 || $user.strength > 80` - OR has lower precedence  
+- `($user.health > 30 && $user.magic > 10) || $inventory.potion == true` - Parentheses for grouping
 
 ## Values Collection
 
@@ -79,6 +91,45 @@ Access object properties using bracket syntax:
 
 Both notations can be used in any comparison operation supported by Quis.
 
+## Boolean Expressions
+
+Quis supports complex boolean expressions using both symbolic and word-based operators:
+
+### Operators
+
+**AND Operations (both equivalent):**
+
+- `&&` - Symbolic AND operator
+- `AND` - Word-based AND operator
+
+**OR Operations (both equivalent):**
+
+- `||` - Symbolic OR operator  
+- `OR` - Word-based OR operator
+
+### Precedence
+
+Operators follow standard precedence rules:
+
+1. Parentheses `()` - Highest precedence
+2. Comparison operators (`>`, `<`, `==`, etc.)
+3. AND operators (`&&`, `AND`)
+4. OR operators (`||`, `OR`) - Lowest precedence
+
+### Examples
+
+```js
+// Simple boolean expressions
+'$user.age >= 18 && $user.verified == true'
+'$health < 20 OR $inventory.potion == true'
+
+// Mixed symbolic and word operators
+'$level >= 5 AND ($gold > 100 || $gems >= 10)'
+
+// Complex nested expressions
+'($user.role == "admin" || $user.role == "moderator") && $user.active == true'
+```
+
 ## Example
 
 ```js
@@ -116,6 +167,14 @@ const content = [
     {
         condition: '$user["status"] == "active"',
         text: "D"
+    },
+    {
+        condition: '$user.age >= 21 && $user.status == "premium"',
+        text: "E - Premium adult content" 
+    },
+    {
+        condition: '$user.health < 20 || $inventory.potion == true',
+        text: "F - Emergency healing available"
     }
 ];
 
@@ -124,7 +183,7 @@ const results = content.filter(
     (entry) => parse(entry.condition, { values: values } ) == true
 );
 
-// Results include entries B, C, and D.
+// Results include entries B, C, D, and potentially E and F (depending on user data).
 console.log(results);
 
 ```
