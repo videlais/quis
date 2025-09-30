@@ -1,7 +1,13 @@
-// Import parse() function.
-import quis from '../build/quis.cjs';
+// Import parse() function from the source.
+import quis from './index.js';
 
 // Save a global property and function.
-window.quis = {
-    parse: quis.parse
-};
+if (typeof window !== 'undefined') {
+    window.quis = {
+        parse: quis.parse
+    };
+} else if (typeof global !== 'undefined') {
+    global.quis = {
+        parse: quis.parse
+    };
+}

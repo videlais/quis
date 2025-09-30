@@ -1,0 +1,45 @@
+{
+  "testEnvironment": "node",
+  "testMatch": [
+    "**/test/**/*.test.js"
+  ],
+  "transform": {
+    "^.+\\.jsx?$": "babel-jest"
+  },
+  "transformIgnorePatterns": [
+    "node_modules/(?!(peggy)/)"
+  ],
+  "globals": {
+    "__DEV__": true
+  },
+  "projects": [
+    {
+      "displayName": "node",
+      "testEnvironment": "node",
+      "testMatch": ["**/test/node/**/*.test.js"],
+      "transform": {
+        "^.+\\.jsx?$": "babel-jest"
+      },
+      "transformIgnorePatterns": [
+        "node_modules/(?!(peggy)/)"
+      ]
+    },
+    {
+      "displayName": "jsdom",
+      "testEnvironment": "jsdom",
+      "testMatch": ["**/test/web/**/*.test.js"],
+      "transform": {
+        "^.+\\.jsx?$": "babel-jest"
+      },
+      "transformIgnorePatterns": [
+        "node_modules/(?!(peggy)/)"
+      ],
+      "setupFilesAfterEnv": ["<rootDir>/test/setup/jsdom.setup.js"]
+    }
+  ],
+  "collectCoverageFrom": [
+    "src/**/*.js",
+    "build/**/*.js",
+    "!**/node_modules/**"
+  ]
+}

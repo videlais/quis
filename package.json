@@ -1,6 +1,6 @@
 {
   "name": "quis",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A simple DSL for data sorting and filtering",
   "main": "build/quis.cjs",
   "module": "build/quis.js",
@@ -21,12 +21,15 @@
     "url": "git+https://github.com/videlais/quis"
   },
   "scripts": {
-    "test": "mocha",
+    "test": "jest",
+    "test:node": "jest --testMatch='**/test/node/**/*.test.js'",
+    "test:web": "jest --testMatch='**/test/web/**/*.test.js' --testEnvironment=jsdom",
+    "test:all": "npm run test:node && npm run test:web",
     "compile": "peggy -o ./build/quis.cjs ./src/dsl.pegjs",
     "build": "esbuild ./src/index.js --bundle --minify --platform=node --target=es2020 --outfile=./build/quis.js",
     "build:web": "esbuild ./src/web-index.js --minify --bundle --platform=browser --target=es6 --outfile=./build/quis.min.js",
     "lint": "eslint ./test --fix",
-    "all": "npm run lint && npm run test && npm run compile && npm run build && npm run build:web"
+    "all": "npm run lint && npm run test:all && npm run compile && npm run build && npm run build:web"
   },
   "author": "Dan Cox",
   "license": "MIT",
@@ -34,13 +37,16 @@
     "peggy": "^5.0.4"
   },
   "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
     "@eslint/js": "^9.30.0",
-    "chai": "^6.0.1",
+    "babel-jest": "^29.7.0",
     "esbuild": "^0.25.10",
     "eslint": "^9.30.0",
-    "eslint-plugin-mocha": "^11.1.0",
+    "eslint-plugin-jest": "^28.6.0",
     "globals": "^16.2.0",
-    "mocha": "^11.7.1",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.0"
   },
