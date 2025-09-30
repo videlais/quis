@@ -267,4 +267,106 @@ describe('Grammar', function () {
       expect(parser.parse('$example is not $example2', options)).to.equal(true);
     });
   });
+
+  describe('Key-Value Expressions', function () {
+    let options;
+
+    beforeEach(function () {
+      options = {
+        values: (label) => {
+          if (label === 'user') {
+            return {
+              name: 'John',
+              age: 25,
+              profile: {
+                score: 100,
+                level: 'advanced'
+              }
+            };
+          }
+          if (label === 'settings') {
+            return {
+              'theme-color': 'dark',
+              'font-size': 14,
+              'auto save': true
+            };
+          }
+          if (label === 'numbers') {
+            return {
+              a: 10,
+              b: 20
+            };
+          }
+        }
+      };
+    });
+
+    describe('Dot Notation', function () {
+      it('Should access object property with dot notation - string value', function () {
+        expect(parser.parse('$user.name == "John"', options)).to.equal(true);
+      });
+
+      it('Should access object property with dot notation - number comparison', function () {
+        expect(parser.parse('$user.age > 20', options)).to.equal(true);
+      });
+
+      it('Should access object property with dot notation - number equality', function () {
+        expect(parser.parse('$user.age == 25', options)).to.equal(true);
+      });
+
+      it('Should return false for non-matching dot notation access', function () {
+        expect(parser.parse('$user.name == "Jane"', options)).to.equal(false);
+      });
+
+      it('Should compare numeric properties using dot notation', function () {
+        expect(parser.parse('$numbers.a < $numbers.b', options)).to.equal(true);
+      });
+    });
+
+    describe('Bracket Notation', function () {
+      it('Should access object property with bracket notation - unquoted key', function () {
+        expect(parser.parse('$user[name] == "John"', options)).to.equal(true);
+      });
+
+      it('Should access object property with bracket notation - double quoted key', function () {
+        expect(parser.parse('$user["age"] > 20', options)).to.equal(true);
+      });
+
+      it('Should access object property with bracket notation - single quoted key', function () {
+        expect(parser.parse('$user[\'age\'] == 25', options)).to.equal(true);
+      });
+
+      it('Should access hyphenated keys with bracket notation', function () {
+        expect(parser.parse('$settings["theme-color"] == "dark"', options)).to.equal(true);
+      });
+
+      it('Should access keys with spaces using bracket notation', function () {
+        expect(parser.parse('$settings["auto save"] == true', options)).to.equal(true);
+      });
+
+      it('Should compare numeric properties using bracket notation', function () {
+        expect(parser.parse('$numbers["a"] < $numbers["b"]', options)).to.equal(true);
+      });
+    });
+
+    describe('Mixed Access Patterns', function () {
+      it('Should work with mixed dot and bracket notation in same expression', function () {
+        expect(parser.parse('$user.age > $settings["font-size"]', options)).to.equal(true);
+      });
+
+      it('Should work with inequality comparison using mixed notation', function () {
+        expect(parser.parse('$user.name != $settings["theme-color"]', options)).to.equal(true);
+      });
+    });
+
+    describe('Non-existent Keys', function () {
+      it('Should handle non-existent dot notation keys gracefully', function () {
+        expect(parser.parse('$user.nonexistent == null', options)).to.equal(true);
+      });
+
+      it('Should handle non-existent bracket notation keys gracefully', function () {
+        expect(parser.parse('$user["nonexistent"] == null', options)).to.equal(true);
+      });
+    });
+  });
 });

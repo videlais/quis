@@ -39,10 +39,45 @@ const values = (name) => {
         result = 5;
     }
 
+    // Return object for key-value access examples.
+    if (name === 'user') {
+        result = {
+            name: 'John',
+            age: 25,
+            profile: {
+                score: 100,
+                level: 'advanced'
+            }
+        };
+    }
+
     // Return either default or set value.
     return result;
 };
 ```
+
+## Key-Value Access
+
+Quis supports accessing object properties using both dot notation and bracket notation:
+
+### Dot Notation
+
+Access object properties using dot syntax:
+
+- `$user.name` - Access the 'name' property of the user object
+- `$user.age` - Access the 'age' property of the user object
+
+### Bracket Notation
+
+Access object properties using bracket syntax:
+
+- `$user[name]` - Access using unquoted key
+- `$user["name"]` - Access using double-quoted key
+- `$user['name']` - Access using single-quoted key
+- `$settings["theme-color"]` - Access keys with hyphens
+- `$settings["auto save"]` - Access keys with spaces
+
+Both notations can be used in any comparison operation supported by Quis.
 
 ## Example
 
@@ -55,6 +90,13 @@ const values = (label) => {
     if(label == 'example') {
         return 2;
     }
+    if(label == 'user') {
+        return {
+            name: 'John',
+            age: 25,
+            status: 'active'
+        };
+    }
 };
 
 // Example contents array.
@@ -66,6 +108,14 @@ const content = [
     {
         condition: "$example == 2",
         text: "B"
+    },
+    {
+        condition: '$user.age >= 18',
+        text: "C"
+    },
+    {
+        condition: '$user["status"] == "active"',
+        text: "D"
     }
 ];
 
@@ -74,8 +124,7 @@ const results = content.filter(
     (entry) => parse(entry.condition, { values: values } ) == true
 );
 
-// Single result.
-// [ { condition: '$example == 2', text: 'B' } ]
+// Results include entries B, C, and D.
 console.log(results);
 
 ```

@@ -3,7 +3,10 @@ Start
 
 Value
     = val1:Number { return val1; }
+    / val1:StringLiteral { return val1; }
+    / val1:GetKeyValue { return val1; }
     / val1:GetVariable { return val1; }
+    / val1:NullValue { return val1; }
     / BooleanValue
 
 ConditionalOperators
@@ -22,6 +25,9 @@ ConditionalOperators
 BooleanValue "Boolean Value"
   = True { return true; }
   / False { return false; }
+
+NullValue "Null Value"
+  = "null" Whitespace { return null; }
 
 /* Expression Constants */
 Whitespace "Whitespace"              = [ \t\n\r]*
@@ -63,13 +69,16 @@ Negative "Negative"                         = "-"
 Letter "Letter"                             = [a-zA-Z_]
 
 Variable "Variable"
-  = char1:"$" chars:(Letter / Digit)* Whitespace {
+  = char1:"$" chars:(Letter / Digit)* {
     // Create variable name.
     return chars.join("");
   }
 
+VariableWithWhitespace "Variable With Whitespace"
+  = varname:Variable Whitespace { return varname; }
+
 GetVariable "Variable Retrieval"
-  = val1:Variable {
+  = val1:VariableWithWhitespace {
     // Create default null.
     let result = null;
 
@@ -81,3 +90,55 @@ GetVariable "Variable Retrieval"
     // Return either null or retrieved value.
     return result;
   }
+
+GetKeyValue "Key-Value Retrieval"
+  = val1:DotNotation { return val1; }
+  / val1:BracketNotation { return val1; }
+
+DotNotation "Dot Notation"
+  = obj:Variable key:DotKey Whitespace {
+    // Create default null.
+    let result = null;
+
+    // Does the values() function exist?
+    if(Object.prototype.hasOwnProperty.call(options, 'values')) {
+        let objValue = options.values(obj);
+        if (objValue && typeof objValue === 'object' && key in objValue) {
+            result = objValue[key];
+        }
+    }
+
+    // Return either null or retrieved value.
+    return result;
+  }
+
+BracketNotation "Bracket Notation"
+  = obj:Variable "[" key:BracketKey "]" Whitespace {
+    // Create default null.
+    let result = null;
+
+    // Does the values() function exist?
+    if(Object.prototype.hasOwnProperty.call(options, 'values')) {
+        let objValue = options.values(obj);
+        if (objValue && typeof objValue === 'object' && key in objValue) {
+            result = objValue[key];
+        }
+    }
+
+    // Return either null or retrieved value.
+    return result;
+  }
+
+DotKey "Dot Key"
+  = "." first:Letter rest:(Letter / Digit)* {
+    return first + rest.join("");
+  }
+
+BracketKey "Bracket Key"
+  = chars:(Letter / Digit / "_" / "-")+ { return chars.join(""); }
+  / "\"" chars:(Letter / Digit / "_" / " " / "-")* "\"" { return chars.join(""); }
+  / "'" chars:(Letter / Digit / "_" / " " / "-")* "'" { return chars.join(""); }
+
+StringLiteral "String Literal"
+  = "\"" chars:(Letter / Digit / "_" / " " / "-")* "\"" Whitespace { return chars.join(""); }
+  / "'" chars:(Letter / Digit / "_" / " " / "-")* "'" Whitespace { return chars.join(""); }

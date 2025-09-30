@@ -1,6 +1,6 @@
 {
   "name": "quis",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "A simple DSL for data sorting and filtering",
   "main": "build/quis.cjs",
   "module": "build/quis.js",
