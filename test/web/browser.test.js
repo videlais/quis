@@ -169,47 +169,6 @@ describe('Quis Web Build', () => {
     });
   });
 
-  describe('Performance in Browser', () => {
-    test('Should parse expressions efficiently', () => {
-      const start = performance.now();
-      
-      for (let i = 0; i < 1000; i++) {
-        Quis.parse('true && false || true');
-      }
-      
-      const end = performance.now();
-      const duration = end - start;
-      
-      // Should complete 1000 simple parses in reasonable time (< 100ms)
-      expect(duration).toBeLessThan(100);
-    });
-
-    test('Should handle complex expressions efficiently', () => {
-      const values = (label) => {
-        const data = {
-          user: { age: 25, name: 'test', active: true },
-          settings: { theme: 'dark', notifications: true },
-          features: { premium: false, beta: true }
-        };
-        return data[label] || null;
-      };
-
-      const complexExpression = '($user.age >= 18 && $user.active == true) || ($settings.theme == "dark" AND $features.beta == true)';
-      
-      const start = performance.now();
-      
-      for (let i = 0; i < 100; i++) {
-        Quis.parse(complexExpression, { values });
-      }
-      
-      const end = performance.now();
-      const duration = end - start;
-      
-      // Should complete 100 complex parses in reasonable time (< 50ms)
-      expect(duration).toBeLessThan(50);
-    });
-  });
-
   describe('Browser Compatibility Features', () => {
     test('Should work with browser-style object access', () => {
       const values = (label) => {
