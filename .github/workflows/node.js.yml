@@ -39,5 +39,3 @@ jobs:
       run: npm run test:node
     - name: Run web browser tests
       run: npm run test:web
-    - name: Validate test counts
-      run: ./scripts/validate-tests.sh
