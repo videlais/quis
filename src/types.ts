@@ -50,11 +50,23 @@ export interface QuitSyntaxError extends Error {
 export type ValuesCallback = (variableName: string) => unknown;
 
 /**
+ * Custom condition evaluator function type
+ */
+export type CustomConditionEvaluator = (value: unknown, expected: unknown) => boolean;
+
+/**
+ * Registry of custom conditions
+ */
+export type CustomConditionRegistry = Record<string, CustomConditionEvaluator>;
+
+/**
  * Options for the parse function
  */
 export interface ParseOptions {
   /** Callback function to resolve variable values */
   values?: ValuesCallback;
+  /** Registry of custom condition evaluators */
+  customConditions?: CustomConditionRegistry;
   /** Starting rule for parsing (defaults to "Start") */
   startRule?: string;
   /** Grammar source for better error reporting */
@@ -91,6 +103,14 @@ export interface Quis {
   parse: (input: string, options?: ParseOptions) => ParseResult;
   /** Syntax error class for enhanced error handling */
   SyntaxError: Parser['SyntaxError'];
+  /** Add a custom condition evaluator */
+  addCustomCondition: (name: string, evaluator: CustomConditionEvaluator) => void;
+  /** Remove a custom condition evaluator */
+  removeCustomCondition: (name: string) => boolean;
+  /** Get all registered custom conditions */
+  getCustomConditions: () => CustomConditionRegistry;
+  /** Clear all custom conditions */
+  clearCustomConditions: () => void;
 }
 
 /**

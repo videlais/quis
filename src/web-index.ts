@@ -5,7 +5,7 @@
  * Supports both window and global contexts for maximum compatibility.
  */
 
-import * as QuisModule from './index';
+import QuisModule from './index';
 import type { Quis } from './types';
 
 /**
@@ -22,7 +22,11 @@ declare global {
  */
 const quisGlobal: Quis = {
     parse: QuisModule.parse,
-    SyntaxError: QuisModule.SyntaxError
+    SyntaxError: QuisModule.SyntaxError,
+    addCustomCondition: QuisModule.addCustomCondition,
+    removeCustomCondition: QuisModule.removeCustomCondition,
+    getCustomConditions: QuisModule.getCustomConditions,
+    clearCustomConditions: QuisModule.clearCustomConditions
 };
 
 /**
@@ -40,4 +44,11 @@ if (typeof window !== 'undefined') {
 
 // Also export as ES module for modern bundlers
 export default quisGlobal;
-export const { parse, SyntaxError } = quisGlobal;
+export const { 
+    parse, 
+    SyntaxError, 
+    addCustomCondition, 
+    removeCustomCondition, 
+    getCustomConditions, 
+    clearCustomConditions 
+} = quisGlobal;

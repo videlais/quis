@@ -15,7 +15,8 @@ AndExpression
 
 // Comparison expressions have highest precedence  
 ComparisonExpression
-  = left:Value operator:(Shorthand_Inequality/GreaterThanOrEqual/Shorthand_GreaterThanOrEqual/LessThanOrEqual/Shorthand_LessThanOrEqual/LessThan/Shorthand_LessThan/GreaterThan/Shorthand_GreaterThan/Equality/Shorthand_Equality/Inequality) right:Value {
+  = CustomCondition
+  / left:Value operator:(Shorthand_Inequality/GreaterThanOrEqual/Shorthand_GreaterThanOrEqual/LessThanOrEqual/Shorthand_LessThanOrEqual/LessThan/Shorthand_LessThan/GreaterThan/Shorthand_GreaterThan/Equality/Shorthand_Equality/Inequality) right:Value {
       // Handle different operator formats
       let opText;
       if (Array.isArray(operator)) {
@@ -178,3 +179,20 @@ BracketKey "Bracket Key"
 StringLiteral "String Literal"
   = "\"" chars:(Letter / Digit / "_" / " " / "-")* "\"" Whitespace { return chars.join(""); }
   / "'" chars:(Letter / Digit / "_" / " " / "-")* "'" Whitespace { return chars.join(""); }
+
+/* Custom Conditions */
+CustomCondition "Custom Condition"
+  = left:Value "custom:" name:CustomConditionName right:Value {
+    // Check if custom conditions are available in options
+    if (options && options.customConditions && typeof options.customConditions[name] === 'function') {
+      return options.customConditions[name](left, right);
+    }
+    
+    // Throw error if custom condition is not defined
+    throw new Error(`Custom condition '${name}' is not defined`);
+  }
+
+CustomConditionName "Custom Condition Name"
+  = first:Letter rest:(Letter / Digit / "_")* Whitespace {
+    return first + rest.join("");
+  }

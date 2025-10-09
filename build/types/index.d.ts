@@ -12,5 +12,5 @@ declare const QuisModule: Quis;
 export default QuisModule;
 export declare const parse: (input: string, options?: ParseOptions) => ParseResult;
 export declare const SyntaxError: new (message: string, expected: import("./types.js").Expected[], found: string | null, location?: import("./types.js").Location) => import("./types.js").QuitSyntaxError;
-export type { Quis, Parser, ParseOptions, ParseResult, ValuesCallback, Location, Expected, QuitSyntaxError } from './types.js';
+export type { Quis, Parser, ParseOptions, ParseResult, ValuesCallback, CustomConditionEvaluator, CustomConditionRegistry, Location, Expected, QuitSyntaxError } from './types.js';
 //# sourceMappingURL=index.d.ts.map

@@ -266,6 +266,55 @@
                     <div class="example-code">!$config.debug && $config.production</div>
                     <button onclick="runExample('!$config.debug && $config.production', JSON.stringify({config: {debug: false, production: true}}, null, 2))">Try it</button>
                 </div>
+
+                <div class="example">
+                    <h3>Custom Conditions</h3>
+                    <div class="example-code">$text custom:contains "hello"</div>
+                    <button onclick="runCustomConditionExample()">Try it</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📖 Supported Operations</h2>
+            <div class="examples">
+                <div class="example">
+                    <h3>Comparison Operators</h3>
+                    <div class="example-code">==, !=, >, <, >=, <=
+is, is not, gt, lt, gte, lte</div>
+                </div>
+
+                <div class="example">
+                    <h3>Boolean Operators</h3>
+                    <div class="example-code">&&, ||, !
+AND, OR, and, or</div>
+                </div>
+
+                <div class="example">
+                    <h3>Data Types</h3>
+                    <div class="example-code">Numbers: 42, 3.14
+Strings: "hello", 'world'
+Booleans: true, false
+Null: null</div>
+                </div>
+
+                <div class="example">
+                    <h3>Variable Access</h3>
+                    <div class="example-code">$variableName
+$object.property
+$nested.deep.value</div>
+                </div>
+
+                <div class="example">
+                    <h3>Custom Conditions</h3>
+                    <div class="example-code">$value custom:conditionName $expected
+
+// Add custom condition
+quis.addCustomCondition('contains', 
+  (value, expected) => 
+    String(value).includes(String(expected))
+);</div>
+                </div>
             </div>
         </div>
 
@@ -344,6 +393,32 @@
             
             // Scroll to result
             resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        function runCustomConditionExample() {
+            // Add a custom condition for string contains
+            window.quis.addCustomCondition('contains', (value, expected) => {
+                return String(value).includes(String(expected));
+            });
+            
+            // Set up the example
+            const expression = '$text custom:contains "hello"';
+            const data = JSON.stringify({
+                text: 'hello world from custom conditions!'
+            }, null, 2);
+            
+            runExample(expression, data);
+            
+            // Show additional info about custom conditions
+            setTimeout(() => {
+                const conditions = window.quis.getCustomConditions();
+                const additionalInfo = `\n\nℹ️ Custom Conditions Demo:\n• Added "contains" condition\n• Available conditions: ${Object.keys(conditions).join(', ')}\n• Syntax: $value custom:conditionName $expected`;
+                
+                const resultDiv = document.getElementById('result');
+                if (resultDiv.style.display !== 'none') {
+                    resultDiv.textContent += additionalInfo;
+                }
+            }, 100);
         }
         
         // Allow Enter key to execute

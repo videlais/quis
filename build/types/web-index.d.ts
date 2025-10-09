@@ -4,7 +4,6 @@
  * Exposes the Quis parser globally for browser environments.
  * Supports both window and global contexts for maximum compatibility.
  */
-import * as QuisModule from './index';
 import type { Quis } from './types';
 /**
  * Browser global interface extension
@@ -19,5 +18,5 @@ declare global {
  */
 declare const quisGlobal: Quis;
 export default quisGlobal;
-export declare const parse: (input: string, options?: QuisModule.ParseOptions) => QuisModule.ParseResult, SyntaxError: new (message: string, expected: QuisModule.Expected[], found: string | null, location?: QuisModule.Location) => QuisModule.QuitSyntaxError;
+export declare const parse: (input: string, options?: import("./types").ParseOptions) => import("./types").ParseResult, SyntaxError: new (message: string, expected: import("./types").Expected[], found: string | null, location?: import("./types").Location) => import("./types").QuitSyntaxError, addCustomCondition: (name: string, evaluator: import("./types").CustomConditionEvaluator) => void, removeCustomCondition: (name: string) => boolean, getCustomConditions: () => import("./types").CustomConditionRegistry, clearCustomConditions: () => void;
 //# sourceMappingURL=web-index.d.ts.map
