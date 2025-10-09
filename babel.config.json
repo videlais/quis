@@ -8,7 +8,8 @@
         },
         "modules": "commonjs"
       }
-    ]
+    ],
+    "@babel/preset-typescript"
   ],
   "env": {
     "test": {
@@ -21,7 +22,8 @@
             },
             "modules": "commonjs"
           }
-        ]
+        ],
+        "@babel/preset-typescript"
       ]
     }
   }
