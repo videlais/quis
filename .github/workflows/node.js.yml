@@ -28,13 +28,13 @@ jobs:
     - name: Install dependencies
       run: npm install
     - name: Run linting
-      run: npm run lint
+      run: npm run lint:check
+    - name: Run TypeScript type checking
+      run: npm run typecheck
     - name: Compile grammar
       run: npm run compile
-    - name: Build Node.js version
+    - name: Build TypeScript and Webpack bundles
       run: npm run build
-    - name: Build web version
-      run: npm run build:web
     - name: Run Node.js tests
       run: npm run test:node
     - name: Run web browser tests

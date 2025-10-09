@@ -21,7 +21,8 @@
     "build",
     "src",
     "test",
-    "scripts"
+    "scripts",
+    "docs"
   ],
   "keywords": [
     "DSL",
@@ -47,6 +48,7 @@
     "lint": "eslint ./src ./test --fix",
     "lint:check": "eslint ./src ./test",
     "typecheck": "tsc --noEmit",
+    "docs:update": "cp build/quis.min.js docs/",
     "all": "npm run clean && npm run lint && npm run typecheck && npm run compile && npm run build && npm run test:all"
   },
   "author": "Dan Cox",

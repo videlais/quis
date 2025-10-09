@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive web demo of the Quis DSL Parser - a lightweight domain-specific language for data sorting and filtering">
+    <meta name="keywords" content="DSL, parser, data filtering, JavaScript, TypeScript, boolean expressions">
+    <meta name="author" content="Quis DSL Parser">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <title>Quis DSL Parser - Interactive Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .demo-section h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .expression-input, .data-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            transition: border-color 0.2s;
+        }
+
+        .expression-input:focus, .data-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .data-input {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            white-space: pre-wrap;
+        }
+
+        .result.success {
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            color: #22543d;
+        }
+
+        .result.error {
+            background: #fff5f5;
+            border: 2px solid #feb2b2;
+            color: #c53030;
+        }
+
+        .examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .example {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .example h3 {
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .example-code {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .example button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .example button:hover {
+            background: #3182ce;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Quis DSL Parser</h1>
+            <p>Interactive demonstration of the lightweight data sorting DSL</p>
+        </div>
+
+        <div class="demo-section">
+            <h2>🚀 Interactive Demo</h2>
+            <div class="input-group">
+                <label for="expressionInput">DSL Expression:</label>
+                <input type="text" id="expressionInput" class="expression-input" 
+                       placeholder="Enter your DSL expression (e.g., $user.age > 18 && $user.active)" 
+                       value="$user.age > 18 && $user.active">
+            </div>
+            
+            <div class="input-group">
+                <label for="dataInput">Data Context (JSON):</label>
+                <textarea id="dataInput" class="data-input" 
+                          placeholder="Enter JSON data for variable resolution">{
+  "user": {
+    "name": "Alice",
+    "age": 25,
+    "active": true,
+    "level": 5
+  },
+  "config": {
+    "debug": false,
+    "maxRetries": 3
+  }
+}</textarea>
+            </div>
+            
+            <button class="button" onclick="executeExpression()">Execute Expression</button>
+            
+            <div id="result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📚 Example Expressions</h2>
+            <div class="examples">
+                <div class="example">
+                    <h3>Boolean Logic</h3>
+                    <div class="example-code">true && false</div>
+                    <button onclick="runExample('true && false', '{}')">Try it</button>
+                </div>
+
+                <div class="example">
+                    <h3>Numeric Comparison</h3>
+                    <div class="example-code">$user.age >= 21</div>
+                    <button onclick="runExample('$user.age >= 21', JSON.stringify({user: {age: 25}}, null, 2))">Try it</button>
+                </div>
+
+                <div class="example">
+                    <h3>String Equality</h3>
+                    <div class="example-code">$user.name == "Alice"</div>
+                    <button onclick="runExample('$user.name == &quot;Alice&quot;', JSON.stringify({user: {name: 'Alice'}}, null, 2))">Try it</button>
+                </div>
+
+                <div class="example">
+                    <h3>Complex Expression</h3>
+                    <div class="example-code">($user.level > 3 && $user.active) || $user.admin</div>
+                    <button onclick="runExample('($user.level > 3 && $user.active) || $user.admin', JSON.stringify({user: {level: 5, active: true, admin: false}}, null, 2))">Try it</button>
+                </div>
+
+                <div class="example">
+                    <h3>Shorthand Operators</h3>
+                    <div class="example-code">$score gt 100 and $lives gte 1</div>
+                    <button onclick="runExample('$score gt 100 and $lives gte 1', JSON.stringify({score: 150, lives: 3}, null, 2))">Try it</button>
+                </div>
+
+                <div class="example">
+                    <h3>Negation</h3>
+                    <div class="example-code">!$config.debug && $config.production</div>
+                    <button onclick="runExample('!$config.debug && $config.production', JSON.stringify({config: {debug: false, production: true}}, null, 2))">Try it</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>📖 Supported Operations</h2>
+            <div class="examples">
+                <div class="example">
+                    <h3>Comparison Operators</h3>
+                    <div class="example-code">==, !=, >, <, >=, <=
+is, is not, gt, lt, gte, lte</div>
+                </div>
+
+                <div class="example">
+                    <h3>Boolean Operators</h3>
+                    <div class="example-code">&&, ||, !
+AND, OR, and, or</div>
+                </div>
+
+                <div class="example">
+                    <h3>Data Types</h3>
+                    <div class="example-code">Numbers: 42, 3.14
+Strings: "hello", 'world'
+Booleans: true, false
+Null: null</div>
+                </div>
+
+                <div class="example">
+                    <h3>Variable Access</h3>
+                    <div class="example-code">$variableName
+$object.property
+$nested.deep.value</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>
+                Built with ❤️ | 
+                <a href="https://github.com/videlais/quis" target="_blank">View on GitHub</a> | 
+                <a href="https://npmjs.com/package/quis" target="_blank">NPM Package</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Load the Quis DSL Parser -->
+    <script src="quis.min.js"></script>
+    
+    <script>
+        // Initialize the demo
+        function executeExpression() {
+            const expressionInput = document.getElementById('expressionInput');
+            const dataInput = document.getElementById('dataInput');
+            const resultDiv = document.getElementById('result');
+            
+            const expression = expressionInput.value.trim();
+            const dataText = dataInput.value.trim();
+            
+            if (!expression) {
+                showResult('Please enter a DSL expression', 'error');
+                return;
+            }
+            
+            try {
+                // Parse the JSON data
+                let data = {};
+                if (dataText) {
+                    data = JSON.parse(dataText);
+                }
+                
+                // Create values callback function
+                const values = (variableName) => {
+                    return data[variableName] || null;
+                };
+                
+                // Execute the expression
+                const result = window.quis.parse(expression, { values });
+                
+                // Show the result
+                showResult(`Expression: ${expression}\nResult: ${JSON.stringify(result, null, 2)}\nType: ${typeof result}`, 'success');
+                
+            } catch (error) {
+                let errorMessage = `Error: ${error.message}`;
+                
+                if (error.expected && error.found !== undefined) {
+                    errorMessage += `\nExpected: ${error.expected.map(e => e.description || e.type).join(', ')}`;
+                    errorMessage += `\nFound: ${error.found}`;
+                    
+                    if (error.location) {
+                        errorMessage += `\nLocation: Line ${error.location.start.line}, Column ${error.location.start.column}`;
+                    }
+                }
+                
+                showResult(errorMessage, 'error');
+            }
+        }
+        
+        function runExample(expression, data) {
+            document.getElementById('expressionInput').value = expression;
+            document.getElementById('dataInput').value = data;
+            executeExpression();
+        }
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+            
+            // Scroll to result
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Allow Enter key to execute
+        document.getElementById('expressionInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                executeExpression();
+            }
+        });
+        
+        // Execute the default expression on load
+        window.addEventListener('load', function() {
+            executeExpression();
+        });
+    </script>
+</body>
+</html>

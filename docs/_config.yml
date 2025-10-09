@@ -1,0 +1,16 @@
+# GitHub Pages Configuration
+
+# Enable Jekyll processing
+markdown: kramdown
+highlighter: rouge
+
+# Site settings
+title: "Quis DSL Parser"
+description: "Interactive demonstration of the lightweight data sorting DSL"
+baseurl: "/quis"
+url: "https://videlais.github.io"
+
+# Build settings
+plugins:
+  - jekyll-sitemap
+  - jekyll-seo-tag
