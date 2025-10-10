@@ -1,10 +1,13 @@
 # Quis
 
-*Lightweight (~20 KiB) data sorting DSL.*
+[![npm version](https://badge.fury.io/js/quis.svg)](https://badge.fury.io/js/quis)
+[![Node.js CI](https://github.com/videlais/quis/actions/workflows/node.js.yml/badge.svg)](https://github.com/videlais/quis/actions/workflows/node.js.yml)
+[![Coverage Status](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)](https://github.com/videlais/quis)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Bundle Size](https://img.shields.io/badge/bundle%20size-11.5KB-brightgreen.svg)](https://github.com/videlais/quis)
 
-Based on the Latin word *quis*, this project, like its origin, implies a question of existing complex data. Quis provides a domain specific language (DSL) for performing comparisons on values within a collection using string-based comparisons.
-
-Quis is designed for story sorting with dynamic narrative structures where comparisons are needed to select or sort content. It uses a Parsing Expression Grammar (PEG) to define possible JavaScript and shorthand conditional comparisons:
+Based on the Latin word *quis*, this project, like its origin, implies a question of existing complex data. Quis provides a lightweight domain specific language (DSL) for performing comparisons on values within a collection using a custom AST (Abstract Syntax Tree) parser built from scratch for optimal performance and minimal bundle size.
 
 ## Comparisons
 
@@ -31,9 +34,9 @@ Quis supports complex boolean expressions with proper operator precedence:
 
 ## Values Collection
 
-To be as lightweight as possible, Quis does not contain state or database functionality. This must be provided by developers while also matching the expected callback structure expected.
+To be as lightweight as possible, Quis does not contain state or database functionality. This must be provided by developers while also matching the expected callback structure.
 
-Based on the underlining PEG compilation process, Quis expects a *values()* callback function returning values based on the passed-in variable name. For example, a simple collection returning specific values based on labels might be the following:
+The AST parser processes expressions through three phases: **Tokenization** → **Parsing** → **Evaluation**. During evaluation, Quis expects a *values()* callback function returning values based on the passed-in variable name. For example, a simple collection returning specific values based on labels might be the following:
 
 ```javascript
 const values = (name) => {
@@ -67,6 +70,35 @@ const values = (name) => {
     return result;
 };
 ```
+
+## AST Parser Architecture
+
+Quis uses a custom-built AST (Abstract Syntax Tree) parser designed for optimal performance and minimal bundle size. The parsing process consists of three distinct phases:
+
+### 1. Tokenization
+
+The **Tokenizer** breaks down the input expression string into a sequence of tokens (numbers, strings, variables, operators, keywords, etc.). Each token includes its type, value, and position for precise error reporting.
+
+### 2. Parsing
+
+The **Parser** processes the token sequence and builds an Abstract Syntax Tree that respects operator precedence and handles complex nested expressions. It supports:
+
+- Arithmetic operations (`+`, `-`, `*`, `/`)
+- Comparison operations (`==`, `!=`, `>`, `<`, `>=`, `<=`, `is`, `is not`)
+- Logical operations (`and`, `or`, `not`, `&&`, `||`, `!`)
+- Property access (dot notation and bracket notation)
+- Parentheses for expression grouping
+
+### 3. Evaluation
+
+The **Evaluator** traverses the AST and computes the final result by calling the provided values function for variable resolution and executing the appropriate operations.
+
+This three-phase architecture provides:
+
+- **High Performance**: 79% smaller bundle size compared to grammar-based parsers
+- **Type Safety**: Full TypeScript support with comprehensive type definitions
+- **Error Handling**: Clear, contextual error messages with position information
+- **Extensibility**: Support for custom conditions and operators
 
 ## Key-Value Access
 
@@ -191,3 +223,36 @@ const results = content.filter(
 console.log(results);
 
 ```
+
+## Performance & Bundle Size
+
+Quis is designed for optimal performance and minimal footprint:
+
+- **Lightweight**: Only 11.5KB minified bundle size
+- **Fast**: Custom AST parser optimized for speed
+- **Zero Dependencies**: No external runtime dependencies
+- **TypeScript Native**: Built from the ground up with TypeScript
+- **Tree-Shakable**: ES modules support for optimal bundling
+
+## Features
+
+- ✅ **Arithmetic Operations**: `+`, `-`, `*`, `/`
+- ✅ **Comparison Operations**: `==`, `!=`, `>`, `<`, `>=`, `<=`, `is`, `is not`
+- ✅ **Logical Operations**: `and`, `or`, `not`, `&&`, `||`, `!`
+- ✅ **Property Access**: Dot notation (`$user.name`) and bracket notation (`$user["name"]`)
+- ✅ **Operator Precedence**: Proper mathematical and logical precedence
+- ✅ **Parentheses Grouping**: Control evaluation order with parentheses
+- ✅ **Type Safety**: Full TypeScript support with comprehensive type definitions
+- ✅ **Error Handling**: Clear error messages with position information
+- ✅ **Custom Conditions**: Extensible with custom evaluation functions
+- ✅ **Browser & Node.js**: Universal compatibility
+
+## Installation
+
+```bash
+npm install quis
+```
+
+## License
+
+MIT

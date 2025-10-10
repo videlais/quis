@@ -31,8 +31,6 @@ jobs:
       run: npm run lint:check
     - name: Run TypeScript type checking
       run: npm run typecheck
-    - name: Compile grammar
-      run: npm run compile
     - name: Build TypeScript and Webpack bundles
       run: npm run build
     - name: Run Node.js tests
