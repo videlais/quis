@@ -5,7 +5,10 @@
     "**/test/**/*.test.{js,ts}"
   ],
   "transform": {
-    "^.+\\.tsx?$": "ts-jest",
+    "^.+\\.tsx?$": ["ts-jest", {
+      "useESM": true,
+      "tsconfig": "tsconfig.test.json"
+    }],
     "^.+\\.jsx?$": "babel-jest"
   },
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
@@ -13,11 +16,7 @@
     "node_modules/(?!(peggy)/)"
   ],
   "globals": {
-    "__DEV__": true,
-    "ts-jest": {
-      "useESM": true,
-      "tsconfig": "tsconfig.test.json"
-    }
+    "__DEV__": true
   },
   "extensionsToTreatAsEsm": [".ts"],
   "moduleNameMapper": {
@@ -30,19 +29,16 @@
       "testEnvironment": "node",
       "testMatch": ["**/test/node/**/*.test.{js,ts}"],
       "transform": {
-        "^.+\\.tsx?$": "ts-jest",
+        "^.+\\.tsx?$": ["ts-jest", {
+          "useESM": true,
+          "tsconfig": "tsconfig.test.json"
+        }],
         "^.+\\.jsx?$": "babel-jest"
       },
       "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
       "transformIgnorePatterns": [
         "node_modules/(?!(peggy)/)"
       ],
-      "globals": {
-        "ts-jest": {
-          "useESM": true,
-          "tsconfig": "tsconfig.test.json"
-        }
-      },
       "extensionsToTreatAsEsm": [".ts"],
       "moduleNameMapper": {
         "^(\\.{1,2}/.*)\\.js$": "$1"
@@ -54,7 +50,10 @@
       "testEnvironment": "jsdom",
       "testMatch": ["**/test/web/**/*.test.{js,ts}"],
       "transform": {
-        "^.+\\.tsx?$": "ts-jest",
+        "^.+\\.tsx?$": ["ts-jest", {
+          "useESM": true,
+          "tsconfig": "tsconfig.test.json"
+        }],
         "^.+\\.jsx?$": "babel-jest"
       },
       "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json"],
@@ -62,12 +61,6 @@
         "node_modules/(?!(peggy)/)"
       ],
       "setupFilesAfterEnv": ["<rootDir>/test/setup/jsdom.setup.js"],
-      "globals": {
-        "ts-jest": {
-          "useESM": true,
-          "tsconfig": "tsconfig.test.json"
-        }
-      },
       "extensionsToTreatAsEsm": [".ts"],
       "moduleNameMapper": {
         "^(\\.{1,2}/.*)\\.js$": "$1"
@@ -76,8 +69,19 @@
   ],
   "collectCoverageFrom": [
     "src/**/*.{js,ts}",
-    "build/**/*.js",
-    "!**/node_modules/**",
-    "!**/*.d.ts"
-  ]
+    "!src/**/*.d.ts",
+    "!src/web-index.ts",
+    "!src/types-only.ts",
+    "!**/node_modules/**"
+  ],
+  "coverageDirectory": "coverage",
+  "coverageReporters": ["text", "lcov", "html"],
+  "coverageThreshold": {
+    "global": {
+      "branches": 75,
+      "functions": 90,
+      "lines": 90,
+      "statements": 90
+    }
+  }
 }

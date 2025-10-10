@@ -71,6 +71,7 @@ export interface ParseOptions {
   startRule?: string;
   /** Grammar source for better error reporting */
   grammarSource?: string;
+
 }
 
 /**

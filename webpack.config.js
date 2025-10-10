@@ -37,22 +37,23 @@ const baseConfig = {
   },
 };
 
-// CommonJS build configuration  
-const cjsConfig = {
+// ES Module build configuration
+const esmConfig = {
   ...baseConfig,
   entry: './src/index.ts',
   target: 'node',
   output: {
     path: path.resolve(__dirname, 'build'),
-    filename: 'quis-ts.cjs',
+    filename: 'quis.js',
     library: {
-      type: 'commonjs2',
+      type: 'module',
     },
     clean: false,
   },
-  externals: {
-    '../build/quis.cjs': 'commonjs ./quis.cjs',
+  experiments: {
+    outputModule: true,
   },
+  externals: {}, // Bundle everything for ES modules
 };
 
 // Web/Browser build configuration
@@ -73,4 +74,4 @@ const webConfig = {
   externals: {}, // Bundle everything for web
 };
 
-export default [cjsConfig, webConfig];
+export default [esmConfig, webConfig];

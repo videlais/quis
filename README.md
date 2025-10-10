@@ -133,8 +133,12 @@ Operators follow standard precedence rules:
 ## Example
 
 ```js
-// Import parse() function.
-const { parse } = require('quis');
+// Import parse() function (ES Modules)
+import { parse } from 'quis';
+
+// Or default import
+import quis from 'quis';
+const { parse } = quis;
 
 // Create a values function. (This must be a callback returning a value.)
 const values = (label) => {

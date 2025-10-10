@@ -5,11 +5,54 @@
  * Supports key-value pair access, complex boolean expressions, and more.
  */
 
-import type { Quis, Parser, ParseOptions, ParseResult, CustomConditionRegistry, CustomConditionEvaluator } from './types.js';
+import type { Quis, ParseOptions, ParseResult, CustomConditionRegistry, CustomConditionEvaluator, QuitSyntaxError, Expected, Location } from './types.js';
+import { Tokenizer } from './tokenizer';
+import { Parser } from './parser';
+import { Evaluator } from './evaluator';
 
-// Import the generated parser - we'll type it properly
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const quis = require('../build/quis.cjs') as Parser;
+/**
+ * SyntaxError class for parsing errors
+ */
+class QuisSyntaxError extends Error implements QuitSyntaxError {
+    expected: Expected[];
+    found: string | null;
+    location?: Location;
+    name = 'SyntaxError' as const;
+    
+    constructor(message: string, expected: Expected[], found: string | null, location?: Location) {
+        super(message);
+        this.expected = expected;
+        this.found = found;
+        this.location = location;
+    }
+
+    format(): string {
+        let result = this.message;
+        if (this.location) {
+            result += ` at line ${this.location.start.line}, column ${this.location.start.column}`;
+        }
+        return result;
+    }
+}
+
+/**
+ * Parse using the AST parser
+ */
+function parseExpression(input: string, options: ParseOptions): ParseResult {
+    try {
+        const tokenizer = new Tokenizer(input);
+        const tokens = tokenizer.tokenize();
+        const parser = new Parser(tokens);
+        const ast = parser.parse();
+        const evaluator = new Evaluator(options);
+        return evaluator.evaluate(ast);
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new QuisSyntaxError(error.message, [], null);
+        }
+        throw error;
+    }
+}
 
 // Global registry for custom conditions
 const customConditions: CustomConditionRegistry = {};
@@ -54,13 +97,13 @@ const QuisModule: Quis = {
                 ...options?.customConditions
             }
         };
-        return quis.parse(input, mergedOptions);
+        return parseExpression(input, mergedOptions);
     },
 
     /**
      * Enhanced syntax error class for better error handling
      */
-    SyntaxError: quis.SyntaxError,
+    SyntaxError: QuisSyntaxError,
 
     /**
      * Add a custom condition evaluator
@@ -114,9 +157,13 @@ const QuisModule: Quis = {
 
 export default QuisModule;
 
-// Named exports for convenience
+// Named exports for convenience and CommonJS compatibility
 export const parse = QuisModule.parse;
-export const { SyntaxError } = QuisModule;
+export const SyntaxError = QuisModule.SyntaxError;
+export const addCustomCondition = QuisModule.addCustomCondition;
+export const removeCustomCondition = QuisModule.removeCustomCondition;
+export const getCustomConditions = QuisModule.getCustomConditions;
+export const clearCustomConditions = QuisModule.clearCustomConditions;
 
 // Re-export types
 export type {

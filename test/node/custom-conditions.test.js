@@ -3,7 +3,11 @@
  * Tests the new custom condition functionality
  */
 
-const quis = require('../../build/quis-ts.cjs').default;
+let quis;
+
+beforeAll(async () => {
+    quis = (await import('../../src/index.js')).default;
+});
 
 describe('Custom Conditions', () => {
     beforeEach(() => {
