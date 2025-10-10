@@ -56,6 +56,7 @@ export class Evaluator {
         if (this.options.values && typeof this.options.values === 'function') {
             try {
                 return this.options.values(node.name);
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (error) {
                 // If values function throws, treat as undefined variable
                 return null;
@@ -73,6 +74,7 @@ export class Evaluator {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     return (obj as Record<string, any>)[node.property];
                 }
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (error) {
                 // If values function throws, treat as null
                 return null;
