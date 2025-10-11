@@ -31,10 +31,7 @@ const baseConfig = {
   optimization: {
     minimize: true,
   },
-  externals: {
-    // Don't bundle the generated parser - it's already built
-    '../build/quis.cjs': 'commonjs ../build/quis.cjs',
-  },
+  externals: {},
 };
 
 // ES Module build configuration
@@ -44,7 +41,7 @@ const esmConfig = {
   target: 'node',
   output: {
     path: path.resolve(__dirname, 'build'),
-    filename: 'quis.js',
+    filename: 'quis.esm.js',
     library: {
       type: 'module',
     },
@@ -54,6 +51,22 @@ const esmConfig = {
     outputModule: true,
   },
   externals: {}, // Bundle everything for ES modules
+};
+
+// CommonJS build configuration
+const cjsConfig = {
+  ...baseConfig,
+  entry: './src/index.ts',
+  target: 'node',
+  output: {
+    path: path.resolve(__dirname, 'build'),
+    filename: 'quis.js',
+    library: {
+      type: 'commonjs2',
+    },
+    clean: false,
+  },
+  externals: {}, // Bundle everything for CommonJS
 };
 
 // Web/Browser build configuration
@@ -74,4 +87,4 @@ const webConfig = {
   externals: {}, // Bundle everything for web
 };
 
-export default [esmConfig, webConfig];
+export default [esmConfig, cjsConfig, webConfig];
