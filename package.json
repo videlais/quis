@@ -37,6 +37,13 @@
     "type": "git",
     "url": "git+https://github.com/videlais/quis"
   },
+  "bugs": {
+    "url": "https://github.com/videlais/quis/issues"
+  },
+  "homepage": "https://github.com/videlais/quis#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "test": "jest --coverage",
     "test:node": "jest --testMatch='**/test/node/**/*.test.{js,ts}'",
