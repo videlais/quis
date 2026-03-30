@@ -5,7 +5,7 @@
 [![Coverage Status](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)](https://github.com/videlais/quis)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Bundle Size](https://img.shields.io/badge/bundle%20size-11.5KB-brightgreen.svg)](https://github.com/videlais/quis)
+[![Bundle Size](https://img.shields.io/badge/bundle%20size-12.7KB-brightgreen.svg)](https://github.com/videlais/quis)
 
 Based on the Latin word *quis*, this project, like its origin, implies a question of existing complex data. Quis provides a lightweight domain specific language (DSL) for performing comparisons on values within a collection using a custom AST (Abstract Syntax Tree) parser built from scratch for optimal performance and minimal bundle size.
 
@@ -228,7 +228,7 @@ console.log(results);
 
 Quis is designed for optimal performance and minimal footprint:
 
-- **Lightweight**: Only 11.5KB minified bundle size
+- **Lightweight**: Only 12.7KB minified bundle size
 - **Fast**: Custom AST parser optimized for speed
 - **Zero Dependencies**: No external runtime dependencies
 - **TypeScript Native**: Built from the ground up with TypeScript

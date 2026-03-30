@@ -11,6 +11,7 @@ export declare class Evaluator {
     private evaluateLiteral;
     private evaluateVariable;
     private evaluatePropertyAccess;
+    private isDangerousProperty;
     private evaluateBinaryOperation;
     private evaluateUnaryOperation;
     private evaluateCustomCondition;

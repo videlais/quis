@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.9] - 30 Mar 2026
+
+### Security
+
+- Fixed prototype pollution vulnerability in property access evaluator (CWE-1321).
+- Replaced loose equality (`==`/`!=`) with strict equality (`===`/`!==`) in DSL comparison operators.
+- Fixed `brace-expansion` transitive dependency vulnerability.
+
+### Changed
+
+- Updated dependencies to latest semver-compatible versions.
+- Updated documentation to correct bundle size (12.7KB) and Node.js version requirements.
+- Updated CONTRIBUTING.md project structure to include all source files.
+
 ## [1.3.8] - 1 Feb 2026
 
 ## Changed

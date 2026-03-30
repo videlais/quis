@@ -32,7 +32,7 @@ git remote add upstream https://github.com/videlais/quis.git
 
 ### Prerequisites
 
-- Node.js 20.x or 22.x (use `.nvmrc` file)
+- Node.js 18.x or higher (20.x recommended, see `.nvmrc` file)
 - npm (comes with Node.js)
 
 ### Installation
@@ -180,17 +180,20 @@ npm run typecheck
 
 ```
 quis/
-├── src/              # TypeScript source code
-│   ├── ast-types.ts  # AST node type definitions
-│   ├── tokenizer.ts  # Lexical analysis
-│   ├── parser.ts     # Syntax analysis
-│   ├── evaluator.ts  # AST evaluation
-│   └── index.ts      # Main entry point
-├── test/             # Test files
-│   ├── node/         # Node.js tests
-│   └── web/          # Browser tests
-├── build/            # Compiled output (generated)
-└── docs/             # Documentation
+├── src/                # TypeScript source code
+│   ├── ast-types.ts    # AST node type definitions
+│   ├── tokenizer.ts    # Lexical analysis
+│   ├── parser.ts       # Syntax analysis
+│   ├── evaluator.ts    # AST evaluation
+│   ├── types.ts        # TypeScript type definitions
+│   ├── types-only.ts   # Types-only export
+│   ├── web-index.ts    # Browser entry point
+│   └── index.ts        # Main entry point
+├── test/               # Test files
+│   ├── node/           # Node.js tests
+│   └── web/            # Browser tests
+├── build/              # Compiled output (generated)
+└── docs/               # Documentation
 ```
 
 ## Build System

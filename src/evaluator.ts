@@ -70,7 +70,9 @@ export class Evaluator {
         if (this.options.values && typeof this.options.values === 'function') {
             try {
                 const obj = this.options.values(node.object);
-                if (obj && typeof obj === 'object' && node.property in obj) {
+                if (obj && typeof obj === 'object'
+                    && !this.isDangerousProperty(node.property)
+                    && Object.prototype.hasOwnProperty.call(obj, node.property)) {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     return (obj as Record<string, any>)[node.property];
                 }
@@ -81,6 +83,12 @@ export class Evaluator {
             }
         }
         return null;
+    }
+
+    private isDangerousProperty(property: string): boolean {
+        return property === '__proto__'
+            || property === 'constructor'
+            || property === 'prototype';
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,11 +110,11 @@ export class Evaluator {
             // Comparison operators
             case '==':
             case 'is':
-                return left == right;
+                return left === right;
             
             case '!=':
             case 'is not':
-                return left != right;
+                return left !== right;
             
             case '>':
             case 'gt':
