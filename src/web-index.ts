@@ -36,10 +36,10 @@ const quisGlobal: Quis = {
 if (typeof window !== 'undefined') {
     // Browser environment
     window.quis = quisGlobal;
-} else if (typeof global !== 'undefined') {
+} else if (typeof globalThis !== 'undefined') {
     // Node.js or web worker environment
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (global as any).quis = quisGlobal;
+    (globalThis as any).quis = quisGlobal;
 }
 
 // Also export as ES module for modern bundlers
