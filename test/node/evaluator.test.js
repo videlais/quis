@@ -141,17 +141,17 @@ describe('Evaluator', () => {
                 left: { type: 'literal', value: 5 },
                 right: { type: 'literal', value: 0 }
             };
-            expect(evaluator.evaluate(divideByZero)).toBe(Infinity);
+            expect(() => evaluator.evaluate(divideByZero)).toThrow('Division by zero');
         });
 
         test('should throw error for unknown binary operator', () => {
             const unknownOpNode = {
                 type: 'binary',
-                operator: '%',
+                operator: '^^',
                 left: { type: 'literal', value: 5 },
                 right: { type: 'literal', value: 2 }
             };
-            expect(() => evaluator.evaluate(unknownOpNode)).toThrow('Unknown binary operator: %');
+            expect(() => evaluator.evaluate(unknownOpNode)).toThrow('Unknown binary operator: ^^');
         });
     });
 
@@ -198,7 +198,7 @@ describe('Evaluator', () => {
 
             const propertyNode = {
                 type: 'property',
-                object: 'user',
+                object: { type: 'variable', name: 'user' },
                 property: 'name',
                 notation: 'dot'
             };
@@ -214,7 +214,7 @@ describe('Evaluator', () => {
 
             const bracketNode = {
                 type: 'property',
-                object: 'data',
+                object: { type: 'variable', name: 'data' },
                 property: 'key-with-dashes',
                 notation: 'bracket'
             };
@@ -228,7 +228,7 @@ describe('Evaluator', () => {
 
             const propertyNode = {
                 type: 'property',
-                object: 'nullObject',
+                object: { type: 'variable', name: 'nullObject' },
                 property: 'someProperty',
                 notation: 'dot'
             };
@@ -242,7 +242,7 @@ describe('Evaluator', () => {
 
             const propertyNode = {
                 type: 'property',
-                object: 'user',
+                object: { type: 'variable', name: 'user' },
                 property: 'age', // This property doesn't exist
                 notation: 'dot'
             };
@@ -256,7 +256,7 @@ describe('Evaluator', () => {
 
             const propertyNode = {
                 type: 'property',
-                object: 'primitive',
+                object: { type: 'variable', name: 'primitive' },
                 property: 'length',
                 notation: 'dot'
             };
@@ -268,7 +268,7 @@ describe('Evaluator', () => {
 
             const propertyNode = {
                 type: 'property',
-                object: 'anything',
+                object: { type: 'variable', name: 'anything' },
                 property: 'property',
                 notation: 'dot'
             };
@@ -435,7 +435,7 @@ describe('Evaluator', () => {
 
             const propertyNode = {
                 type: 'property',
-                object: 'user',
+                object: { type: 'variable', name: 'user' },
                 property: 'profile',
                 notation: 'dot'
             };

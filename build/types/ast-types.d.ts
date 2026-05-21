@@ -20,6 +20,8 @@ export declare enum TokenType {
     MINUS = "MINUS",
     MULTIPLY = "MULTIPLY",
     DIVIDE = "DIVIDE",
+    MODULO = "MODULO",
+    EXPONENT = "EXPONENT",
     IS = "IS",
     IS_NOT = "IS_NOT",
     GT = "GT",
@@ -29,11 +31,18 @@ export declare enum TokenType {
     AND = "AND",
     OR = "OR",
     NOT = "NOT",
+    IN = "IN",
+    NOT_IN = "NOT_IN",
+    BETWEEN = "BETWEEN",
+    LIKE = "LIKE",
+    NULLISH_COALESCE = "NULLISH_COALESCE",
     CUSTOM = "CUSTOM",
     COLON = "COLON",
     IDENTIFIER = "IDENTIFIER",
     LPAREN = "LPAREN",
     RPAREN = "RPAREN",
+    COMMA = "COMMA",
+    QUESTION = "QUESTION",
     EOF = "EOF",
     WHITESPACE = "WHITESPACE"
 }
@@ -58,7 +67,7 @@ export interface VariableNode extends ASTNode {
 }
 export interface PropertyAccessNode extends ASTNode {
     type: 'property';
-    object: string;
+    object: ASTNode;
     property: string;
     notation: 'dot' | 'bracket';
 }
@@ -78,5 +87,21 @@ export interface CustomConditionNode extends ASTNode {
     name: string;
     left: ASTNode;
     right: ASTNode;
+}
+export interface ArrayLiteralNode extends ASTNode {
+    type: 'array';
+    elements: ASTNode[];
+}
+export interface BetweenNode extends ASTNode {
+    type: 'between';
+    value: ASTNode;
+    low: ASTNode;
+    high: ASTNode;
+}
+export interface TernaryNode extends ASTNode {
+    type: 'ternary';
+    condition: ASTNode;
+    consequent: ASTNode;
+    alternate: ASTNode;
 }
 //# sourceMappingURL=ast-types.d.ts.map

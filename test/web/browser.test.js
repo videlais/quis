@@ -30,180 +30,160 @@ describe('Quis Web Build', () => {
     expect(typeof Quis).toBe('object');
   });
 
-  test('Should expose parse function', () => {
+  test('Should expose evaluate and compile functions', () => {
+    expect(Quis.evaluate).toBeDefined();
+    expect(typeof Quis.evaluate).toBe('function');
+    expect(Quis.compile).toBeDefined();
+    expect(typeof Quis.compile).toBe('function');
     expect(Quis.parse).toBeDefined();
     expect(typeof Quis.parse).toBe('function');
   });
 
   describe('Basic Browser Functionality', () => {
-    test('Should parse simple boolean expressions', () => {
-      expect(Quis.parse('true')).toBe(true);
-      expect(Quis.parse('false')).toBe(false);
-      expect(Quis.parse('true && false')).toBe(false);
-      expect(Quis.parse('true || false')).toBe(true);
+    test('Should evaluate simple boolean expressions', () => {
+      expect(Quis.evaluate('true')).toBe(true);
+      expect(Quis.evaluate('false')).toBe(false);
+      expect(Quis.evaluate('true && false')).toBe(false);
+      expect(Quis.evaluate('true || false')).toBe(true);
     });
 
     test('Should handle numeric comparisons', () => {
-      expect(Quis.parse('5 > 3')).toBe(true);
-      expect(Quis.parse('2 < 1')).toBe(false);
-      expect(Quis.parse('10 >= 10')).toBe(true);
-      expect(Quis.parse('7 <= 5')).toBe(false);
+      expect(Quis.evaluate('5 > 3')).toBe(true);
+      expect(Quis.evaluate('2 < 1')).toBe(false);
+      expect(Quis.evaluate('10 >= 10')).toBe(true);
+      expect(Quis.evaluate('7 <= 5')).toBe(false);
     });
 
     test('Should handle string comparisons', () => {
-      expect(Quis.parse('"hello" == "hello"')).toBe(true);
-      expect(Quis.parse('"world" != "hello"')).toBe(true);
-      expect(Quis.parse('"test" is "test"')).toBe(true);
+      expect(Quis.evaluate('"hello" == "hello"')).toBe(true);
+      expect(Quis.evaluate('"world" != "hello"')).toBe(true);
+      expect(Quis.evaluate('"test" is "test"')).toBe(true);
     });
   });
 
   describe('Variable Resolution in Browser', () => {
-    test('Should work with custom values function', () => {
-      const values = (label) => {
-        if (label === 'browserTest') return 42;
-        if (label === 'user') return { name: 'WebUser', age: 30 };
-        return null;
+    test('Should work with context object', () => {
+      const context = {
+        browserTest: 42,
+        user: { name: 'WebUser', age: 30 }
       };
 
-      expect(Quis.parse('$browserTest > 40', { values })).toBe(true);
-      expect(Quis.parse('$user.name == "WebUser"', { values })).toBe(true);
-      expect(Quis.parse('$user.age >= 25', { values })).toBe(true);
+      expect(Quis.evaluate('$browserTest > 40', context)).toBe(true);
+      expect(Quis.evaluate('$user.name == "WebUser"', context)).toBe(true);
+      expect(Quis.evaluate('$user.age >= 25', context)).toBe(true);
     });
 
     test('Should handle browser-specific data structures', () => {
-      const values = (label) => {
-        if (label === 'window') {
-          return {
-            location: { href: 'https://example.com' },
-            innerWidth: 1920,
-            innerHeight: 1080
-          };
+      const context = {
+        window: {
+          location: { href: 'https://example.com' },
+          innerWidth: 1920,
+          innerHeight: 1080
+        },
+        document: {
+          title: 'Test Page',
+          readyState: 'complete'
         }
-        if (label === 'document') {
-          return {
-            title: 'Test Page',
-            readyState: 'complete'
-          };
-        }
-        return null;
       };
 
-      expect(Quis.parse('$window.innerWidth > 1000', { values })).toBe(true);
-      expect(Quis.parse('$document.title == "Test Page"', { values })).toBe(true);
-      expect(Quis.parse('$document.readyState is "complete"', { values })).toBe(true);
+      expect(Quis.evaluate('$window.innerWidth > 1000', context)).toBe(true);
+      expect(Quis.evaluate('$document.title == "Test Page"', context)).toBe(true);
+      expect(Quis.evaluate('$document.readyState is "complete"', context)).toBe(true);
     });
   });
 
   describe('Complex Browser Scenarios', () => {
     test('Should handle user preferences and settings', () => {
-      const values = (label) => {
-        if (label === 'userPrefs') {
-          return {
-            theme: 'dark',
-            notifications: true,
-            'auto-save': true,
-            fontSize: 16
-          };
+      const context = {
+        userPrefs: {
+          theme: 'dark',
+          notifications: true,
+          'auto-save': true,
+          fontSize: 16
+        },
+        capabilities: {
+          webgl: true,
+          localStorage: true,
+          geolocation: false
         }
-        if (label === 'capabilities') {
-          return {
-            webgl: true,
-            localStorage: true,
-            geolocation: false
-          };
-        }
-        return null;
       };
 
-      expect(Quis.parse('$userPrefs.theme == "dark" && $userPrefs.notifications == true', { values })).toBe(true);
-      expect(Quis.parse('$capabilities.webgl == true OR $capabilities.geolocation == true', { values })).toBe(true);
-      expect(Quis.parse('$userPrefs["auto-save"] == true && $userPrefs.fontSize >= 14', { values })).toBe(true);
+      expect(Quis.evaluate('$userPrefs.theme == "dark" && $userPrefs.notifications == true', context)).toBe(true);
+      expect(Quis.evaluate('$capabilities.webgl == true OR $capabilities.geolocation == true', context)).toBe(true);
+      expect(Quis.evaluate('$userPrefs["auto-save"] == true && $userPrefs.fontSize >= 14', context)).toBe(true);
     });
 
     test('Should work with feature detection patterns', () => {
-      const values = (label) => {
-        if (label === 'features') {
-          return {
-            touch: 'ontouchstart' in window,
-            webWorkers: typeof Worker !== 'undefined',
-            canvas: !!document.createElement('canvas').getContext,
-            sessionStorage: typeof sessionStorage !== 'undefined'
-          };
+      const context = {
+        features: {
+          touch: 'ontouchstart' in window,
+          webWorkers: typeof Worker !== 'undefined',
+          canvas: !!document.createElement('canvas').getContext,
+          sessionStorage: typeof sessionStorage !== 'undefined'
         }
-        return null;
       };
 
       // These tests work in JSDOM environment
-      expect(Quis.parse('$features.sessionStorage == true', { values })).toBe(true);
-      expect(Quis.parse('$features.webWorkers == true || $features.canvas == true', { values })).toBe(true);
+      expect(Quis.evaluate('$features.sessionStorage == true', context)).toBe(true);
+      expect(Quis.evaluate('$features.webWorkers == true || $features.canvas == true', context)).toBe(true);
     });
 
     test('Should handle responsive design conditions', () => {
-      const values = (label) => {
-        if (label === 'viewport') {
-          return {
-            width: 1200,
-            height: 800,
-            isMobile: false,
-            isTablet: false,
-            isDesktop: true
-          };
+      const context = {
+        viewport: {
+          width: 1200,
+          height: 800,
+          isMobile: false,
+          isTablet: false,
+          isDesktop: true
         }
-        return null;
       };
 
-      expect(Quis.parse('$viewport.width >= 1024 && $viewport.isDesktop == true', { values })).toBe(true);
-      expect(Quis.parse('$viewport.isMobile == false AND $viewport.width > 768', { values })).toBe(true);
+      expect(Quis.evaluate('$viewport.width >= 1024 && $viewport.isDesktop == true', context)).toBe(true);
+      expect(Quis.evaluate('$viewport.isMobile == false AND $viewport.width > 768', context)).toBe(true);
     });
   });
 
   describe('Error Handling in Browser', () => {
-    test('Should handle parsing errors gracefully', () => {
-      expect(() => Quis.parse('invalid syntax')).toThrow();
-      expect(() => Quis.parse('$undefined.property')).not.toThrow();
+    test('Should handle evaluation errors gracefully', () => {
+      expect(() => Quis.evaluate('invalid syntax')).toThrow();
+      expect(() => Quis.evaluate('$undefined.property')).not.toThrow();
     });
 
-    test('Should handle missing values function', () => {
-      expect(() => Quis.parse('$variable > 5')).not.toThrow();
-      expect(Quis.parse('$variable > 5')).toBe(false); // Should default to null/false
+    test('Should handle missing context', () => {
+      expect(() => Quis.evaluate('$variable > 5')).not.toThrow();
+      expect(Quis.evaluate('$variable > 5')).toBe(false); // Should default to null/false
     });
   });
 
   describe('Browser Compatibility Features', () => {
     test('Should work with browser-style object access', () => {
-      const values = (label) => {
-        // Simulate browser-style nested objects
-        if (label === 'navigator') {
-          return {
-            userAgent: 'Mozilla/5.0...',
-            language: 'en-US',
-            platform: 'Win32',
-            cookieEnabled: true
-          };
+      const context = {
+        navigator: {
+          userAgent: 'Mozilla/5.0...',
+          language: 'en-US',
+          platform: 'Win32',
+          cookieEnabled: true
         }
-        return null;
       };
 
-      expect(Quis.parse('$navigator.cookieEnabled == true', { values })).toBe(true);
-      expect(Quis.parse('$navigator.language == "en-US"', { values })).toBe(true);
+      expect(Quis.evaluate('$navigator.cookieEnabled == true', context)).toBe(true);
+      expect(Quis.evaluate('$navigator.language == "en-US"', context)).toBe(true);
     });
 
     test('Should handle DOM-style data attributes', () => {
-      const values = (label) => {
-        if (label === 'element') {
-          return {
-            'data-theme': 'dark',
-            'data-user-id': '12345',
-            'data-active': 'true',
-            'data-count': '42'
-          };
+      const context = {
+        element: {
+          'data-theme': 'dark',
+          'data-user-id': '12345',
+          'data-active': 'true',
+          'data-count': '42'
         }
-        return null;
       };
 
-      expect(Quis.parse('$element["data-theme"] == "dark"', { values })).toBe(true);
-      expect(Quis.parse('$element["data-user-id"] == "12345"', { values })).toBe(true);
-      expect(Quis.parse('$element["data-active"] == "true" && $element["data-count"] == "42"', { values })).toBe(true);
+      expect(Quis.evaluate('$element["data-theme"] == "dark"', context)).toBe(true);
+      expect(Quis.evaluate('$element["data-user-id"] == "12345"', context)).toBe(true);
+      expect(Quis.evaluate('$element["data-active"] == "true" && $element["data-count"] == "42"', context)).toBe(true);
     });
   });
 });

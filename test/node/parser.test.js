@@ -47,7 +47,7 @@ describe('Parser', () => {
 
             expect(ast).toEqual({
                 type: 'property',
-                object: 'user',
+                object: { type: 'variable', name: 'user' },
                 property: 'name',
                 notation: 'dot'
             });
@@ -61,7 +61,7 @@ describe('Parser', () => {
 
             expect(ast).toEqual({
                 type: 'property',
-                object: 'user',
+                object: { type: 'variable', name: 'user' },
                 property: 'name',
                 notation: 'bracket'
             });
@@ -74,7 +74,7 @@ describe('Parser', () => {
 
             expect(ast2).toEqual({
                 type: 'property',
-                object: 'user',
+                object: { type: 'variable', name: 'user' },
                 property: 'name',
                 notation: 'bracket'
             });
@@ -234,7 +234,7 @@ describe('Parser', () => {
                 name: 'between',
                 left: {
                     type: 'property',
-                    object: 'user',
+                    object: { type: 'variable', name: 'user' },
                     property: 'age',
                     notation: 'dot'
                 },
@@ -299,11 +299,13 @@ describe('Parser', () => {
         });
 
         test('should throw error for invalid bracket notation - no string or identifier', () => {
-            const tokenizer = new Tokenizer('$user[123]'); // number instead of string/identifier
+            // Now numbers ARE accepted in bracket notation (e.g. $arr[0])
+            const tokenizer = new Tokenizer('$user[123]');
             const tokens = tokenizer.tokenize();
             const parser = new Parser(tokens);
 
-            expect(() => parser.parse()).toThrow("Expected string or identifier in bracket notation");
+            // This should now succeed — numeric bracket access is valid
+            expect(() => parser.parse()).not.toThrow();
         });
 
         test('should throw error for missing closing bracket', () => {
@@ -419,7 +421,7 @@ describe('Parser', () => {
 
             expect(ast).toEqual({
                 type: 'property',
-                object: 'data',
+                object: { type: 'variable', name: 'data' },
                 property: 'key-with-dashes',
                 notation: 'bracket'
             });
@@ -434,7 +436,11 @@ describe('Parser', () => {
             expect(ast.type).toBe('binary');
             expect(ast.operator).toBe('-');
             expect(ast.left).toEqual({ type: 'literal', value: 5 });
-            expect(ast.right).toEqual({ type: 'literal', value: -3 });
+            expect(ast.right).toEqual({
+                type: 'unary',
+                operator: '-',
+                operand: { type: 'literal', value: 3 }
+            });
         });
     });
 });

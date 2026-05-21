@@ -3,6 +3,7 @@
  *
  * Type definitions for the Quis domain-specific language parser.
  */
+import type { ASTNode } from './ast-types.js';
 /**
  * Location information for parsing errors
  */
@@ -33,7 +34,7 @@ export interface Expected {
 /**
  * Parser syntax error with enhanced information
  */
-export interface QuitSyntaxError extends Error {
+export interface QuisSyntaxError extends Error {
     expected: Expected[];
     found: string | null;
     location?: Location;
@@ -71,7 +72,31 @@ export interface ParseOptions {
 /**
  * Result of parsing - can be any value depending on the expression
  */
-export type ParseResult = boolean | number | string | null | undefined;
+export type ParseResult = boolean | number | string | null | undefined | unknown[];
+/**
+ * A plain context object mapping top-level variable names to their values.
+ * When evaluating `$user.age`, the evaluator looks up `context['user']` and
+ * then traverses `.age` on the returned object.
+ */
+export type Context = Record<string, unknown>;
+/**
+ * Options for evaluate() and compile()
+ */
+export interface EvaluateOptions {
+    /** Registry of custom condition evaluators */
+    customConditions?: CustomConditionRegistry;
+    /**
+     * Escape hatch: a callback for computed or dynamic variable resolution.
+     * When provided, this takes precedence over the context object.
+     */
+    values?: ValuesCallback;
+}
+/**
+ * A compiled expression predicate returned by compile().
+ * The AST is built once; the returned function can be called many times
+ * with different context objects.
+ */
+export type CompiledExpression = (context?: Context | null) => ParseResult;
 /**
  * Core parser interface
  */
@@ -79,7 +104,7 @@ export interface Parser {
     /** Available starting rules */
     StartRules: string[];
     /** Parser syntax error class */
-    SyntaxError: new (message: string, expected: Expected[], found: string | null, location?: Location) => QuitSyntaxError;
+    SyntaxError: new (message: string, expected: Expected[], found: string | null, location?: Location) => QuisSyntaxError;
     /** Main parsing function */
     parse: (input: string, options?: ParseOptions) => ParseResult;
 }
@@ -87,8 +112,25 @@ export interface Parser {
  * Main Quis interface
  */
 export interface Quis {
-    /** Parse a DSL expression */
-    parse: (input: string, options?: ParseOptions) => ParseResult;
+    /**
+     * Parse a DSL expression string and return its Abstract Syntax Tree.
+     * Does not evaluate the expression.
+     */
+    parse: (input: string) => ASTNode;
+    /**
+     * Evaluate a DSL expression against a context object.
+     * Variable names in the expression (e.g. `$age`) map to top-level keys of
+     * the context (e.g. `{ age: 25 }`).
+     *
+     * Pass `options.values` as an escape hatch for computed / dynamic lookups.
+     */
+    evaluate: (input: string, context?: Context | null, options?: EvaluateOptions) => ParseResult;
+    /**
+     * Compile a DSL expression to a reusable predicate function.
+     * The expression is tokenized and parsed once at compile time; the
+     * returned function can be called many times with different contexts.
+     */
+    compile: (input: string, options?: EvaluateOptions) => CompiledExpression;
     /** Syntax error class for enhanced error handling */
     SyntaxError: Parser['SyntaxError'];
     /** Add a custom condition evaluator */

@@ -7,7 +7,7 @@ import { ParseOptions } from './types.js';
 export declare class Evaluator {
     private options;
     constructor(options?: ParseOptions);
-    evaluate(node: ASTNode): any;
+    evaluate(node: ASTNode): unknown;
     private evaluateLiteral;
     private evaluateVariable;
     private evaluatePropertyAccess;
@@ -15,5 +15,8 @@ export declare class Evaluator {
     private evaluateBinaryOperation;
     private evaluateUnaryOperation;
     private evaluateCustomCondition;
+    private evaluateArrayLiteral;
+    private evaluateBetween;
+    private evaluateTernary;
 }
 //# sourceMappingURL=evaluator.d.ts.map

@@ -1,18 +1,24 @@
-import { 
-    Token, 
-    TokenType, 
-    ASTNode, 
-    LiteralNode, 
-    VariableNode, 
-    PropertyAccessNode, 
-    BinaryOpNode, 
-    UnaryOpNode, 
-    CustomConditionNode 
+import {
+    Token,
+    TokenType,
+    ASTNode,
+    LiteralNode,
+    VariableNode,
+    PropertyAccessNode,
+    BinaryOpNode,
+    UnaryOpNode,
+    CustomConditionNode,
+    ArrayLiteralNode,
+    BetweenNode,
+    TernaryNode
 } from './ast-types.js';
 
 /**
  * Parser that builds an Abstract Syntax Tree from tokens
  * Handles operator precedence and creates a tree structure for evaluation
+ *
+ * Precedence (lowest → highest):
+ *   ternary → or → and → not/comparison → null-coalesce → addition → multiplication → exponent → unary → value
  */
 export class Parser {
     private tokens: Token[];
@@ -24,17 +30,31 @@ export class Parser {
     }
 
     parse(): ASTNode {
-        const result = this.parseOrExpression();
-        
+        const result = this.parseTernaryExpression();
+
         if (!this.isAtEnd()) {
             const token = this.peek();
             throw new Error(`Unexpected token '${token.value}' at position ${token.position}`);
         }
-        
+
         return result;
     }
 
-    // OR has lowest precedence
+    // Ternary has lowest precedence: cond ? a : b
+    private parseTernaryExpression(): ASTNode {
+        const condition = this.parseOrExpression();
+
+        if (this.match(TokenType.QUESTION)) {
+            const consequent = this.parseTernaryExpression(); // right-associative
+            this.consume(TokenType.COLON, "Expected ':' in ternary expression");
+            const alternate = this.parseTernaryExpression();
+            return this.createTernaryNode(condition, consequent, alternate);
+        }
+
+        return condition;
+    }
+
+    // OR has next lowest precedence
     private parseOrExpression(): ASTNode {
         let left = this.parseAndExpression();
 
@@ -60,9 +80,9 @@ export class Parser {
         return left;
     }
 
-    // Comparison has higher precedence than AND
+    // Comparison/NOT has higher precedence than AND
     private parseComparisonExpression(): ASTNode {
-        // Handle unary NOT
+        // Handle unary NOT (preserves existing `not x > 5` → `not (x > 5)` semantics)
         if (this.match(TokenType.NOT)) {
             const operator = this.previous().value;
             const operand = this.parseComparisonExpression();
@@ -71,15 +91,24 @@ export class Parser {
 
         const left = this.parseArithmeticExpression();
 
-        // Check for custom condition
+        // BETWEEN: $age between 18 65
+        if (this.match(TokenType.BETWEEN)) {
+            const low = this.parseArithmeticExpression();
+            const high = this.parseArithmeticExpression();
+            return this.createBetweenNode(left, low, high);
+        }
+
+        // Custom condition: $x custom:name $y
+        // The condition name may be any word token, including DSL keywords
         if (this.match(TokenType.CUSTOM)) {
             this.consume(TokenType.COLON, "Expected ':' after 'custom'");
-            const conditionName = this.consume(TokenType.IDENTIFIER, "Expected condition name after 'custom:'").value;
+            const nameToken = this.consumeWord("Expected condition name after 'custom:'");
+            const conditionName = nameToken.value;
             const right = this.parseArithmeticExpression();
             return this.createCustomConditionNode(conditionName, left, right);
         }
 
-        // Check for comparison operators
+        // Standard comparison operators (including IN, NOT_IN, LIKE)
         if (this.matchComparison()) {
             const operator = this.previous().value;
             const right = this.parseArithmeticExpression();
@@ -89,12 +118,26 @@ export class Parser {
         return left;
     }
 
-    // Arithmetic expression parsing with proper precedence  
+    // Entry point for arithmetic — passes through null-coalesce
     private parseArithmeticExpression(): ASTNode {
-        return this.parseAdditionExpression();
+        return this.parseNullCoalesceExpression();
     }
 
-    // Addition/Subtraction (lowest arithmetic precedence)
+    // Null coalescing: ?? sits between comparison and addition
+    // So `$score ?? 0 > 50` parses as `($score ?? 0) > 50`
+    private parseNullCoalesceExpression(): ASTNode {
+        let left = this.parseAdditionExpression();
+
+        while (this.match(TokenType.NULLISH_COALESCE)) {
+            const operator = this.previous().value;
+            const right = this.parseAdditionExpression();
+            left = this.createBinaryNode(operator, left, right);
+        }
+
+        return left;
+    }
+
+    // Addition/Subtraction
     private parseAdditionExpression(): ASTNode {
         let left = this.parseMultiplicationExpression();
 
@@ -107,17 +150,40 @@ export class Parser {
         return left;
     }
 
-    // Multiplication/Division (higher arithmetic precedence)
+    // Multiplication/Division/Modulo
     private parseMultiplicationExpression(): ASTNode {
-        let left = this.parseValue();
+        let left = this.parseExponentiationExpression();
 
-        while (this.match(TokenType.MULTIPLY, TokenType.DIVIDE)) {
+        while (this.match(TokenType.MULTIPLY, TokenType.DIVIDE, TokenType.MODULO)) {
             const operator = this.previous().value;
-            const right = this.parseValue();
+            const right = this.parseExponentiationExpression();
             left = this.createBinaryNode(operator, left, right);
         }
 
         return left;
+    }
+
+    // Exponentiation — right-associative: 2 ** 3 ** 2 = 2 ** (3 ** 2) = 512
+    private parseExponentiationExpression(): ASTNode {
+        const left = this.parseUnaryExpression();
+
+        if (this.match(TokenType.EXPONENT)) {
+            const operator = this.previous().value;
+            const right = this.parseExponentiationExpression(); // right-associative recursion
+            return this.createBinaryNode(operator, left, right);
+        }
+
+        return left;
+    }
+
+    // Unary minus: -expr
+    private parseUnaryExpression(): ASTNode {
+        if (this.match(TokenType.MINUS)) {
+            const operand = this.parseUnaryExpression(); // right-associative for --x
+            return this.createUnaryNode('-', operand);
+        }
+
+        return this.parseValue();
     }
 
     private parseValue(): ASTNode {
@@ -141,40 +207,63 @@ export class Parser {
             return this.createLiteralNode(null);
         }
 
-        // Handle parenthesized expressions
+        // Parenthesized expressions
         if (this.match(TokenType.LPAREN)) {
-            const expr = this.parseOrExpression();
+            const expr = this.parseTernaryExpression();
             this.consume(TokenType.RPAREN, "Expected ')' after expression");
             return expr;
         }
 
-        // Variables and property access
+        // Array literals: [a, b, c]
+        if (this.match(TokenType.LBRACKET)) {
+            return this.parseArrayLiteral();
+        }
+
+        // Variables with optional chained property access
         if (this.match(TokenType.VARIABLE)) {
             const varName = this.previous().value;
-            
-            // Check for property access
-            if (this.match(TokenType.DOT)) {
-                const property = this.consume(TokenType.IDENTIFIER, "Expected property name after '.'").value;
-                return this.createPropertyAccessNode(varName, property, 'dot');
-            }
-            
-            if (this.match(TokenType.LBRACKET)) {
-                let property: string;
-                if (this.check(TokenType.STRING)) {
-                    property = this.advance().value;
-                } else if (this.check(TokenType.IDENTIFIER)) {
-                    property = this.advance().value;
-                } else {
-                    throw new Error("Expected string or identifier in bracket notation");
+            let result: ASTNode = this.createVariableNode(varName);
+
+            // Build chained property access iteratively: $a.b.c, $a["b"][0]
+            while (this.check(TokenType.DOT) || this.check(TokenType.LBRACKET)) {
+                if (this.match(TokenType.DOT)) {
+                    const property = this.consume(TokenType.IDENTIFIER, "Expected property name after '.'").value;
+                    result = this.createPropertyAccessNode(result, property, 'dot');
+                } else if (this.match(TokenType.LBRACKET)) {
+                    let property: string;
+                    if (this.check(TokenType.STRING)) {
+                        property = this.advance().value;
+                    } else if (this.check(TokenType.IDENTIFIER)) {
+                        property = this.advance().value;
+                    } else if (this.check(TokenType.NUMBER)) {
+                        property = this.advance().value;
+                    } else {
+                        throw new Error("Expected string, identifier, or number in bracket notation");
+                    }
+                    this.consume(TokenType.RBRACKET, "Expected ']' after property name");
+                    result = this.createPropertyAccessNode(result, property, 'bracket');
                 }
-                this.consume(TokenType.RBRACKET, "Expected ']' after property name");
-                return this.createPropertyAccessNode(varName, property, 'bracket');
             }
-            
-            return this.createVariableNode(varName);
+
+            return result;
         }
 
         throw new Error(`Unexpected token '${this.peek().value}' at position ${this.peek().position}`);
+    }
+
+    // Parse array literal after the opening '[' has been consumed
+    private parseArrayLiteral(): ArrayLiteralNode {
+        const elements: ASTNode[] = [];
+
+        if (!this.check(TokenType.RBRACKET)) {
+            elements.push(this.parseTernaryExpression());
+            while (this.match(TokenType.COMMA)) {
+                elements.push(this.parseTernaryExpression());
+            }
+        }
+
+        this.consume(TokenType.RBRACKET, "Expected ']' after array elements");
+        return this.createArrayLiteralNode(elements);
     }
 
     // Utility methods
@@ -186,6 +275,22 @@ export class Parser {
             }
         }
         return false;
+    }
+
+    // Consume an identifier or any keyword token as a word (for custom condition names)
+    private consumeWord(message: string): Token {
+        const wordTokenTypes: TokenType[] = [
+            TokenType.IDENTIFIER, TokenType.IN, TokenType.NOT_IN,
+            TokenType.BETWEEN, TokenType.LIKE, TokenType.IS, TokenType.IS_NOT,
+            TokenType.GT, TokenType.GTE, TokenType.LT, TokenType.LTE,
+            TokenType.AND, TokenType.OR, TokenType.NOT, TokenType.NULL,
+            TokenType.CUSTOM
+        ];
+        const token = this.peek();
+        if (wordTokenTypes.includes(token.type)) {
+            return this.advance();
+        }
+        throw new Error(`${message}. Got '${token.value}' at position ${token.position}`);
     }
 
     private matchComparison(): boolean {
@@ -201,7 +306,10 @@ export class Parser {
             TokenType.GT,
             TokenType.GTE,
             TokenType.LT,
-            TokenType.LTE
+            TokenType.LTE,
+            TokenType.IN,
+            TokenType.NOT_IN,
+            TokenType.LIKE
         );
     }
 
@@ -229,59 +337,45 @@ export class Parser {
 
     private consume(type: TokenType, message: string): Token {
         if (this.check(type)) return this.advance();
-        
+
         const token = this.peek();
         throw new Error(`${message}. Got '${token.value}' at position ${token.position}`);
     }
 
     // AST node creation helpers
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private createLiteralNode(value: any): LiteralNode {
-        return {
-            type: 'literal',
-            value
-        };
+    private createLiteralNode(value: string | number | boolean | null): LiteralNode {
+        return { type: 'literal', value };
     }
 
     private createVariableNode(name: string): VariableNode {
-        return {
-            type: 'variable',
-            name
-        };
+        return { type: 'variable', name };
     }
 
-    private createPropertyAccessNode(object: string, property: string, notation: 'dot' | 'bracket'): PropertyAccessNode {
-        return {
-            type: 'property',
-            object,
-            property,
-            notation
-        };
+    private createPropertyAccessNode(object: ASTNode, property: string, notation: 'dot' | 'bracket'): PropertyAccessNode {
+        return { type: 'property', object, property, notation };
     }
 
     private createBinaryNode(operator: string, left: ASTNode, right: ASTNode): BinaryOpNode {
-        return {
-            type: 'binary',
-            operator,
-            left,
-            right
-        };
+        return { type: 'binary', operator, left, right };
     }
 
     private createUnaryNode(operator: string, operand: ASTNode): UnaryOpNode {
-        return {
-            type: 'unary',
-            operator,
-            operand
-        };
+        return { type: 'unary', operator, operand };
     }
 
     private createCustomConditionNode(name: string, left: ASTNode, right: ASTNode): CustomConditionNode {
-        return {
-            type: 'custom',
-            name,
-            left,
-            right
-        };
+        return { type: 'custom', name, left, right };
+    }
+
+    private createArrayLiteralNode(elements: ASTNode[]): ArrayLiteralNode {
+        return { type: 'array', elements };
+    }
+
+    private createBetweenNode(value: ASTNode, low: ASTNode, high: ASTNode): BetweenNode {
+        return { type: 'between', value, low, high };
+    }
+
+    private createTernaryNode(condition: ASTNode, consequent: ASTNode, alternate: ASTNode): TernaryNode {
+        return { type: 'ternary', condition, consequent, alternate };
     }
 }

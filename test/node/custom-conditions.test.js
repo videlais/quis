@@ -36,9 +36,7 @@ describe('Custom Conditions', () => {
                 return String(value).includes(String(expected));
             });
 
-            const result = quis.parse('$text custom:contains "hello"', {
-                values: (name) => name === 'text' ? 'hello world' : null
-            });
+            const result = quis.evaluate('$text custom:contains "hello"', { text: 'hello world' });
 
             expect(result).toBe(true);
         });
@@ -48,9 +46,7 @@ describe('Custom Conditions', () => {
                 return String(value).includes(String(expected));
             });
 
-            const result = quis.parse('$text custom:contains "goodbye"', {
-                values: (name) => name === 'text' ? 'hello world' : null
-            });
+            const result = quis.evaluate('$text custom:contains "goodbye"', { text: 'hello world' });
 
             expect(result).toBe(false);
         });
@@ -62,9 +58,7 @@ describe('Custom Conditions', () => {
                 return num >= min && num <= max;
             });
 
-            const result = quis.parse('$age custom:between "18-65"', {
-                values: (name) => name === 'age' ? 25 : null
-            });
+            const result = quis.evaluate('$age custom:between "18-65"', { age: 25 });
 
             expect(result).toBe(true);
         });
@@ -80,16 +74,9 @@ describe('Custom Conditions', () => {
                 return num >= min && num <= max;
             });
 
-            const result = quis.parse(
+            const result = quis.evaluate(
                 '($name custom:contains "John" && $age custom:between "20-30") || $admin == true',
-                {
-                    values: (name) => {
-                        if (name === 'name') return 'John Doe';
-                        if (name === 'age') return 25;
-                        if (name === 'admin') return false;
-                        return null;
-                    }
-                }
+                { name: 'John Doe', age: 25, admin: false }
             );
 
             expect(result).toBe(true);
@@ -99,9 +86,7 @@ describe('Custom Conditions', () => {
             quis.addCustomCondition('test', () => true);
             quis.addCustomCondition('test', () => false);
 
-            const result = quis.parse('$value custom:test "anything"', {
-                values: () => 'test'
-            });
+            const result = quis.evaluate('$value custom:test "anything"', { value: 'test' });
 
             expect(result).toBe(false);
         });
@@ -128,9 +113,7 @@ describe('Custom Conditions', () => {
             quis.removeCustomCondition('test');
 
             expect(() => {
-                quis.parse('$value custom:test "anything"', {
-                    values: () => 'test'
-                });
+                quis.evaluate('$value custom:test "anything"', { value: 'test' });
             }).toThrow("Custom condition 'test' is not defined");
         });
     });
@@ -175,15 +158,12 @@ describe('Custom Conditions', () => {
     describe('error handling', () => {
         test('should throw error for undefined custom condition', () => {
             expect(() => {
-                quis.parse('$value custom:undefined "test"', {
-                    values: () => 'value'
-                });
+                quis.evaluate('$value custom:undefined "test"', { value: 'value' });
             }).toThrow("Custom condition 'undefined' is not defined");
         });
 
         test('should work with options-level custom conditions', () => {
-            const result = quis.parse('$value custom:local "test"', {
-                values: () => 'test value',
+            const result = quis.evaluate('$value custom:local "test"', { value: 'test value' }, {
                 customConditions: {
                     local: (value, expected) => String(value).includes(String(expected))
                 }
@@ -195,12 +175,15 @@ describe('Custom Conditions', () => {
         test('should merge global and local custom conditions', () => {
             quis.addCustomCondition('global', () => true);
 
-            const result = quis.parse('$a custom:global "x" && $b custom:local "value"', {
-                values: (name) => name === 'a' ? 'test' : 'test value',
-                customConditions: {
-                    local: (value, expected) => String(value).includes(String(expected))
+            const result = quis.evaluate(
+                '$a custom:global "x" && $b custom:local "value"',
+                { a: 'test', b: 'test value' },
+                {
+                    customConditions: {
+                        local: (value, expected) => String(value).includes(String(expected))
+                    }
                 }
-            });
+            );
 
             expect(result).toBe(true);
         });
@@ -208,8 +191,7 @@ describe('Custom Conditions', () => {
         test('should prioritize local conditions over global ones', () => {
             quis.addCustomCondition('test', () => false);
 
-            const result = quis.parse('$value custom:test "anything"', {
-                values: () => 'test',
+            const result = quis.evaluate('$value custom:test "anything"', { value: 'test' }, {
                 customConditions: {
                     test: () => true
                 }

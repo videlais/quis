@@ -22,6 +22,8 @@ declare global {
  */
 const quisGlobal: Quis = {
     parse: QuisModule.parse,
+    evaluate: QuisModule.evaluate,
+    compile: QuisModule.compile,
     SyntaxError: QuisModule.SyntaxError,
     addCustomCondition: QuisModule.addCustomCondition,
     removeCustomCondition: QuisModule.removeCustomCondition,
@@ -45,7 +47,9 @@ if (typeof window !== 'undefined') {
 // Also export as ES module for modern bundlers
 export default quisGlobal;
 export const { 
-    parse, 
+    parse,
+    evaluate,
+    compile,
     SyntaxError, 
     addCustomCondition, 
     removeCustomCondition, 

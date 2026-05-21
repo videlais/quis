@@ -10,10 +10,13 @@ export type {
     Parser,
     ParseOptions,
     ParseResult,
+    Context,
+    EvaluateOptions,
+    CompiledExpression,
     ValuesCallback,
     CustomConditionEvaluator,
     CustomConditionRegistry,
     Location,
     Expected,
-    QuitSyntaxError
+    QuisSyntaxError
 } from './types.js';

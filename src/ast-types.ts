@@ -7,13 +7,13 @@ export enum TokenType {
     STRING = 'STRING',
     BOOLEAN = 'BOOLEAN',
     NULL = 'NULL',
-    
+
     // Variables
     VARIABLE = 'VARIABLE',
     DOT = 'DOT',
     LBRACKET = 'LBRACKET',
     RBRACKET = 'RBRACKET',
-    
+
     // Operators
     EQUALS = 'EQUALS',
     NOT_EQUALS = 'NOT_EQUALS',
@@ -21,13 +21,15 @@ export enum TokenType {
     GREATER_THAN_EQUAL = 'GREATER_THAN_EQUAL',
     LESS_THAN = 'LESS_THAN',
     LESS_THAN_EQUAL = 'LESS_THAN_EQUAL',
-    
+
     // Arithmetic operators
     PLUS = 'PLUS',
     MINUS = 'MINUS',
     MULTIPLY = 'MULTIPLY',
     DIVIDE = 'DIVIDE',
-    
+    MODULO = 'MODULO',
+    EXPONENT = 'EXPONENT',
+
     // Shorthand operators
     IS = 'IS',
     IS_NOT = 'IS_NOT',
@@ -35,21 +37,36 @@ export enum TokenType {
     GTE = 'GTE',
     LT = 'LT',
     LTE = 'LTE',
-    
+
     // Logical operators
     AND = 'AND',
     OR = 'OR',
     NOT = 'NOT',
-    
+
+    // Collection operators
+    IN = 'IN',
+    NOT_IN = 'NOT_IN',
+    BETWEEN = 'BETWEEN',
+    LIKE = 'LIKE',
+
+    // Null coalescing
+    NULLISH_COALESCE = 'NULLISH_COALESCE',
+
     // Custom conditions
     CUSTOM = 'CUSTOM',
     COLON = 'COLON',
     IDENTIFIER = 'IDENTIFIER',
-    
+
     // Grouping
     LPAREN = 'LPAREN',
     RPAREN = 'RPAREN',
-    
+
+    // Array / collection
+    COMMA = 'COMMA',
+
+    // Ternary
+    QUESTION = 'QUESTION',
+
     // Special
     EOF = 'EOF',
     WHITESPACE = 'WHITESPACE'
@@ -80,7 +97,7 @@ export interface VariableNode extends ASTNode {
 
 export interface PropertyAccessNode extends ASTNode {
     type: 'property';
-    object: string;
+    object: ASTNode;
     property: string;
     notation: 'dot' | 'bracket';
 }
@@ -103,4 +120,23 @@ export interface CustomConditionNode extends ASTNode {
     name: string;
     left: ASTNode;
     right: ASTNode;
+}
+
+export interface ArrayLiteralNode extends ASTNode {
+    type: 'array';
+    elements: ASTNode[];
+}
+
+export interface BetweenNode extends ASTNode {
+    type: 'between';
+    value: ASTNode;
+    low: ASTNode;
+    high: ASTNode;
+}
+
+export interface TernaryNode extends ASTNode {
+    type: 'ternary';
+    condition: ASTNode;
+    consequent: ASTNode;
+    alternate: ASTNode;
 }

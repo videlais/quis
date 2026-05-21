@@ -1,6 +1,6 @@
 /**
  * Comprehensive AST parser test suite
- * Tests all major functionality of the Quis DSL parser
+ * Tests all major functionality of the Quis DSL parser via the evaluate() API
  */
 
 const quis = require('../../build/quis.js');
@@ -8,75 +8,53 @@ const quis = require('../../build/quis.js');
 describe('Comprehensive AST Parser Tests', () => {
     const testCases = [
         // Simple expressions
-        'true',
-        'false', 
-        'null',
-        '42',
-        '"hello"',
-        
+        ['true', true],
+        ['false', false],
+        ['null', null],
+        ['42', 42],
+        ['"hello"', 'hello'],
+
         // Boolean operations
-        'true && false',
-        'true || false',
-        '!true',
-        
+        ['true && false', false],
+        ['true || false', true],
+        ['!true', false],
+
         // Comparisons
-        '5 > 3',
-        '5 < 3', 
-        '5 >= 5',
-        '5 <= 4',
-        '5 == 5',
-        '5 != 3',
-        
+        ['5 > 3', true],
+        ['5 < 3', false],
+        ['5 >= 5', true],
+        ['5 <= 4', false],
+        ['5 == 5', true],
+        ['5 != 3', true],
+
         // Shorthand operators
-        '5 gt 3',
-        '5 lt 3',
-        '5 gte 5', 
-        '5 lte 4',
-        '5 is 5',
-        '5 is not 3',
-        
+        ['5 gt 3', true],
+        ['5 lt 3', false],
+        ['5 gte 5', true],
+        ['5 lte 4', false],
+        ['5 is 5', true],
+        ['5 is not 3', true],
+
         // Complex expressions
-        'true || false && false',
-        '(true || false) && false',
-        '!(5 < 3)',
-        '5 > 3 && 10 < 20',
-        '(5 > 3 || 2 < 1) && true'
+        ['true || false && false', true],
+        ['(true || false) && false', false],
+        ['!(5 < 3)', true],
+        ['5 > 3 && 10 < 20', true],
+        ['(5 > 3 || 2 < 1) && true', true],
     ];
 
-    const testCasesWithOptions = [
-        {
-            expr: '$age > 18',
-            options: { values: (name) => name === 'age' ? 25 : null }
-        },
-        {
-            expr: '$user.name == "John"',
-            options: { values: (name) => name === 'user' ? { name: 'John' } : null }
-        },
-        {
-            expr: '$user["active"] == true',
-            options: { values: (name) => name === 'user' ? { active: true } : null }
-        },
-        {
-            expr: '$a > 5 && $b < 10',
-            options: { values: (name) => ({ a: 6, b: 8 })[name] || null }
-        }
-    ];
-
-    test.each(testCases)('Both parsers should return same result for: %s', (expression) => {
-        const pegResult = quis.parse(expression);
-        const astResult = quis.parse(expression, { useASTParser: true });
-        
-        expect(astResult).toBe(pegResult);
+    test.each(testCases)('evaluate(%s) === %s', (expression, expected) => {
+        expect(quis.evaluate(expression)).toBe(expected);
     });
 
-    test.each(testCasesWithOptions)('Both parsers with options should return same result for: $expr', ({ expr, options }) => {
-        const pegResult = quis.parse(expr, options);
-        const astResult = quis.parse(expr, { ...options, useASTParser: true });
-        
-        expect(astResult).toBe(pegResult);
+    test('evaluate with context: variable resolution', () => {
+        expect(quis.evaluate('$age > 18', { age: 25 })).toBe(true);
+        expect(quis.evaluate('$user.name == "John"', { user: { name: 'John' } })).toBe(true);
+        expect(quis.evaluate('$user["active"] == true', { user: { active: true } })).toBe(true);
+        expect(quis.evaluate('$a > 5 && $b < 10', { a: 6, b: 8 })).toBe(true);
     });
 
-    test('Custom conditions should work identically in both parsers', () => {
+    test('Custom conditions should work', () => {
         const customConditions = {
             contains: (text, search) => String(text).includes(String(search)),
             between: (value, range) => {
@@ -85,30 +63,12 @@ describe('Comprehensive AST Parser Tests', () => {
             }
         };
 
-        const options = {
-            values: (name) => {
-                if (name === 'text') return 'Hello World';
-                if (name === 'age') return 25;
-                return null;
-            },
-            customConditions
-        };
-
-        const expressions = [
-            '$text custom:contains "Hello"',
-            '$age custom:between "18-30"',
-            '$text custom:contains "Goodbye"'
-        ];
-
-        expressions.forEach(expr => {
-            const pegResult = quis.parse(expr, options);
-            const astResult = quis.parse(expr, { ...options, useASTParser: true });
-            
-            expect(astResult).toBe(pegResult);
-        });
+        expect(quis.evaluate('$text custom:contains "Hello"', { text: 'Hello World' }, { customConditions })).toBe(true);
+        expect(quis.evaluate('$age custom:between "18-30"', { age: 25 }, { customConditions })).toBe(true);
+        expect(quis.evaluate('$text custom:contains "Goodbye"', { text: 'Hello World' }, { customConditions })).toBe(false);
     });
 
-    test('Error handling should be consistent', () => {
+    test('Error handling should throw for invalid expressions', () => {
         const invalidExpressions = [
             '5 +',
             '5 > ',
@@ -116,7 +76,7 @@ describe('Comprehensive AST Parser Tests', () => {
         ];
 
         invalidExpressions.forEach(expr => {
-            expect(() => quis.parse(expr)).toThrow();
+            expect(() => quis.evaluate(expr)).toThrow();
         });
     });
 });

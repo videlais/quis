@@ -36,11 +36,16 @@ describe('Tokenizer', () => {
             const tokenizer = new Tokenizer('-15');
             const tokens = tokenizer.tokenize();
 
-            expect(tokens).toHaveLength(2); // NUMBER + EOF
+            expect(tokens).toHaveLength(3); // MINUS + NUMBER + EOF
             expect(tokens[0]).toEqual({
-                type: TokenType.NUMBER,
-                value: '-15',
+                type: TokenType.MINUS,
+                value: '-',
                 position: 0
+            });
+            expect(tokens[1]).toEqual({
+                type: TokenType.NUMBER,
+                value: '15',
+                position: 1
             });
         });
 
@@ -48,11 +53,16 @@ describe('Tokenizer', () => {
             const tokenizer = new Tokenizer('-2.5');
             const tokens = tokenizer.tokenize();
 
-            expect(tokens).toHaveLength(2);
+            expect(tokens).toHaveLength(3); // MINUS + NUMBER + EOF
             expect(tokens[0]).toEqual({
-                type: TokenType.NUMBER,
-                value: '-2.5',
+                type: TokenType.MINUS,
+                value: '-',
                 position: 0
+            });
+            expect(tokens[1]).toEqual({
+                type: TokenType.NUMBER,
+                value: '2.5',
+                position: 1
             });
         });
 
@@ -403,12 +413,13 @@ describe('Tokenizer', () => {
             const tokenizer = new Tokenizer('5--3');
             const tokens = tokenizer.tokenize();
 
-            expect(tokens).toHaveLength(4);
+            expect(tokens).toHaveLength(5); // NUMBER + MINUS + MINUS + NUMBER + EOF
             expect(tokens[0].type).toBe(TokenType.NUMBER);
             expect(tokens[0].value).toBe('5');
             expect(tokens[1].type).toBe(TokenType.MINUS);
-            expect(tokens[2].type).toBe(TokenType.NUMBER);
-            expect(tokens[2].value).toBe('-3');
+            expect(tokens[2].type).toBe(TokenType.MINUS);
+            expect(tokens[3].type).toBe(TokenType.NUMBER);
+            expect(tokens[3].value).toBe('3');
         });
     });
 

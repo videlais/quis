@@ -1,11 +1,14 @@
-import { 
-    ASTNode, 
-    LiteralNode, 
-    VariableNode, 
-    PropertyAccessNode, 
-    BinaryOpNode, 
-    UnaryOpNode, 
-    CustomConditionNode 
+import {
+    ASTNode,
+    LiteralNode,
+    VariableNode,
+    PropertyAccessNode,
+    BinaryOpNode,
+    UnaryOpNode,
+    CustomConditionNode,
+    ArrayLiteralNode,
+    BetweenNode,
+    TernaryNode
 } from './ast-types.js';
 import { ParseOptions } from './types.js';
 
@@ -20,30 +23,37 @@ export class Evaluator {
         this.options = options;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    evaluate(node: ASTNode): any {
+    evaluate(node: ASTNode): unknown {
         switch (node.type) {
             case 'literal':
                 return this.evaluateLiteral(node as LiteralNode);
-            
+
             case 'variable':
                 return this.evaluateVariable(node as VariableNode);
-            
+
             case 'property':
                 return this.evaluatePropertyAccess(node as PropertyAccessNode);
-            
+
             case 'binary':
                 return this.evaluateBinaryOperation(node as BinaryOpNode);
-            
+
             case 'unary':
                 return this.evaluateUnaryOperation(node as UnaryOpNode);
-            
+
             case 'custom':
                 return this.evaluateCustomCondition(node as CustomConditionNode);
-            
+
+            case 'array':
+                return this.evaluateArrayLiteral(node as ArrayLiteralNode);
+
+            case 'between':
+                return this.evaluateBetween(node as BetweenNode);
+
+            case 'ternary':
+                return this.evaluateTernary(node as TernaryNode);
+
             default:
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                throw new Error(`Unknown AST node type: ${(node as any).type}`);
+                throw new Error(`Unknown AST node type: ${(node as { type: string }).type}`);
         }
     }
 
@@ -51,13 +61,11 @@ export class Evaluator {
         return node.value;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private evaluateVariable(node: VariableNode): any {
+    private evaluateVariable(node: VariableNode): unknown {
         if (this.options.values && typeof this.options.values === 'function') {
             try {
                 return this.options.values(node.name);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            } catch (error) {
+            } catch {
                 // If values function throws, treat as undefined variable
                 return null;
             }
@@ -65,22 +73,17 @@ export class Evaluator {
         return null;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private evaluatePropertyAccess(node: PropertyAccessNode): any {
-        if (this.options.values && typeof this.options.values === 'function') {
-            try {
-                const obj = this.options.values(node.object);
-                if (obj && typeof obj === 'object'
-                    && !this.isDangerousProperty(node.property)
-                    && Object.prototype.hasOwnProperty.call(obj, node.property)) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    return (obj as Record<string, any>)[node.property];
-                }
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            } catch (error) {
-                // If values function throws, treat as null
-                return null;
+    private evaluatePropertyAccess(node: PropertyAccessNode): unknown {
+        try {
+            const obj = this.evaluate(node.object);
+            if (obj !== null && obj !== undefined && typeof obj === 'object'
+                && !this.isDangerousProperty(node.property)
+                && Object.prototype.hasOwnProperty.call(obj, node.property)) {
+                return (obj as Record<string, unknown>)[node.property];
             }
+        } catch {
+            // If evaluation throws, treat as null
+            return null;
         }
         return null;
     }
@@ -91,94 +94,148 @@ export class Evaluator {
             || property === 'prototype';
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private evaluateBinaryOperation(node: BinaryOpNode): any {
-        const left = this.evaluate(node.left);
-        const right = this.evaluate(node.right);
+    private evaluateBinaryOperation(node: BinaryOpNode): unknown {
         const operator = node.operator.toLowerCase();
 
+        // Short-circuit logical operators (lazy evaluation)
         switch (operator) {
-            // Logical operators
             case '&&':
-            case 'and':
-                return !!left && !!right;
-            
+            case 'and': {
+                const l = this.evaluate(node.left);
+                if (!l) return false;
+                return !!this.evaluate(node.right);
+            }
             case '||':
-            case 'or':
-                return left || right;
+            case 'or': {
+                const l = this.evaluate(node.left);
+                if (l) return true;
+                return !!this.evaluate(node.right);
+            }
+            case '??': {
+                const l = this.evaluate(node.left);
+                return (l !== null && l !== undefined) ? l : this.evaluate(node.right);
+            }
+        }
 
+        // Eager evaluation for all other operators
+        const left = this.evaluate(node.left);
+        const right = this.evaluate(node.right);
+
+        switch (operator) {
             // Comparison operators
             case '==':
             case 'is':
                 return left === right;
-            
+
             case '!=':
             case 'is not':
                 return left !== right;
-            
+
             case '>':
             case 'gt':
-                return left > right;
-            
+                return (left as number) > (right as number);
+
             case '>=':
             case 'gte':
-                return left >= right;
-            
+                return (left as number) >= (right as number);
+
             case '<':
             case 'lt':
-                return left < right;
-            
+                return (left as number) < (right as number);
+
             case '<=':
             case 'lte':
-                return left <= right;
+                return (left as number) <= (right as number);
 
             // Arithmetic operators
             case '+':
-                // Handle both numeric addition and string concatenation
-                return left + right;
-            
+                if (typeof left === 'string' || typeof right === 'string') {
+                    return String(left) + String(right);
+                }
+                return Number(left) + Number(right);
+
             case '-':
-                // Convert to numbers for arithmetic
                 return Number(left) - Number(right);
-            
+
             case '*':
-                // Convert to numbers for arithmetic
                 return Number(left) * Number(right);
-            
-            case '/':
-                // Convert to numbers for arithmetic
-                return Number(left) / Number(right);
+
+            case '/': {
+                const divisor = Number(right);
+                if (divisor === 0) throw new Error('Division by zero');
+                return Number(left) / divisor;
+            }
+
+            case '%': {
+                const modulus = Number(right);
+                if (modulus === 0) throw new Error('Division by zero');
+                return Number(left) % modulus;
+            }
+
+            case '**':
+                return Math.pow(Number(left), Number(right));
+
+            // Collection operators
+            case 'in':
+                return Array.isArray(right) && (right as unknown[]).includes(left);
+
+            case 'not in':
+                return !(Array.isArray(right) && (right as unknown[]).includes(left));
+
+            case 'like': {
+                const pattern = String(right);
+                const regexStr = pattern
+                    .replace(/[.+^${}()|[\]\\-]/g, '\\$&')   // escape regex special chars (not * or ?)
+                    .replace(/\*/g, '.*')                      // glob * → .*
+                    .replace(/\?/g, '.');                      // glob ? → .
+                return new RegExp(`^${regexStr}$`, 'i').test(String(left));
+            }
 
             default:
                 throw new Error(`Unknown binary operator: ${node.operator}`);
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private evaluateUnaryOperation(node: UnaryOpNode): any {
+    private evaluateUnaryOperation(node: UnaryOpNode): unknown {
         const operand = this.evaluate(node.operand);
 
         switch (node.operator) {
             case '!':
             case 'not':
                 return !operand;
-            
+
+            case '-':
+                return -Number(operand);
+
             default:
                 throw new Error(`Unknown unary operator: ${node.operator}`);
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private evaluateCustomCondition(node: CustomConditionNode): any {
+    private evaluateCustomCondition(node: CustomConditionNode): unknown {
         const left = this.evaluate(node.left);
         const right = this.evaluate(node.right);
 
-        // Check if custom conditions are available in options
         if (this.options.customConditions && typeof this.options.customConditions[node.name] === 'function') {
             return this.options.customConditions[node.name](left, right);
         }
 
-        // Throw error if custom condition is not defined
         throw new Error(`Custom condition '${node.name}' is not defined`);
+    }
+
+    private evaluateArrayLiteral(node: ArrayLiteralNode): unknown[] {
+        return node.elements.map(el => this.evaluate(el));
+    }
+
+    private evaluateBetween(node: BetweenNode): boolean {
+        const value = Number(this.evaluate(node.value));
+        const low = Number(this.evaluate(node.low));
+        const high = Number(this.evaluate(node.high));
+        return value >= low && value <= high;
+    }
+
+    private evaluateTernary(node: TernaryNode): unknown {
+        const condition = this.evaluate(node.condition);
+        return condition ? this.evaluate(node.consequent) : this.evaluate(node.alternate);
     }
 }

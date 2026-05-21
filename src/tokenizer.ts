@@ -1,6 +1,11 @@
 import { Token, TokenType } from './ast-types.js';
 
 /**
+ * Maximum allowed input length to prevent excessively large expressions.
+ */
+export const MAX_INPUT_LENGTH = 10_000;
+
+/**
  * Tokenizer for Quis expressions
  * Converts input string into array of tokens
  */
@@ -16,18 +21,22 @@ export class Tokenizer {
     }
 
     tokenize(): Token[] {
+        if (this.input.length > MAX_INPUT_LENGTH) {
+            throw new Error(`Input exceeds maximum length of ${MAX_INPUT_LENGTH} characters`);
+        }
+
         this.tokens = [];
         this.position = 0;
 
         while (this.position < this.input.length) {
             this.skipWhitespace();
-            
+
             if (this.position >= this.input.length) break;
 
             const char = this.peek();
-            
-            // Numbers (including negative)
-            if (this.isDigit(char) || (char === '-' && this.isDigit(this.peekNext()))) {
+
+            // Numbers (positive only — unary minus handled by parser)
+            if (this.isDigit(char)) {
                 this.tokenizeNumber();
             }
             // Strings
@@ -38,7 +47,7 @@ export class Tokenizer {
             else if (char === '$') {
                 this.tokenizeVariable();
             }
-            // Two-character operators
+            // Two-character operators (checked before single-char)
             else if (this.position + 1 < this.input.length) {
                 const twoChar = this.input.slice(this.position, this.position + 2);
                 if (this.tokenizeTwoCharOperator(twoChar)) {
@@ -47,7 +56,7 @@ export class Tokenizer {
                 // Single-character operators
                 this.tokenizeSingleChar(char);
             }
-            // Single-character operators
+            // Single-character operators (last char in input)
             else {
                 this.tokenizeSingleChar(char);
             }
@@ -59,10 +68,6 @@ export class Tokenizer {
 
     private peek(): string {
         return this.position < this.input.length ? this.input[this.position] : '';
-    }
-
-    private peekNext(): string {
-        return this.position + 1 < this.input.length ? this.input[this.position + 1] : '';
     }
 
     private advance(): string {
@@ -99,12 +104,7 @@ export class Tokenizer {
         const start = this.position;
         let hasDecimal = false;
 
-        // Handle negative sign
-        if (this.peek() === '-') {
-            this.advance();
-        }
-
-        // Read digits and decimal point
+        // Read digits and decimal point (negative sign handled by unary minus in parser)
         while (this.position < this.input.length) {
             const char = this.peek();
             if (this.isDigit(char)) {
@@ -122,20 +122,40 @@ export class Tokenizer {
     }
 
     private tokenizeString(): void {
+        const openingQuotePos = this.position;
         const quote = this.advance(); // consume opening quote
-        const start = this.position;
+        const chars: string[] = [];
 
         while (this.position < this.input.length && this.peek() !== quote) {
-            this.advance();
+            if (this.peek() === '\\') {
+                this.advance(); // consume backslash
+                if (this.position >= this.input.length) {
+                    throw new Error(`Unterminated string starting at position ${openingQuotePos}`);
+                }
+                const escaped = this.advance();
+                switch (escaped) {
+                    case '"':  chars.push('"');  break;
+                    case "'":  chars.push("'");  break;
+                    case '\\': chars.push('\\'); break;
+                    case 'n':  chars.push('\n'); break;
+                    case 't':  chars.push('\t'); break;
+                    case 'r':  chars.push('\r'); break;
+                    default:
+                        // Unknown escape sequence — keep backslash and char
+                        chars.push('\\');
+                        chars.push(escaped);
+                }
+            } else {
+                chars.push(this.advance());
+            }
         }
 
         if (this.position >= this.input.length) {
-            throw new Error(`Unterminated string starting at position ${start - 1}`);
+            throw new Error(`Unterminated string starting at position ${openingQuotePos}`);
         }
 
-        const value = this.input.slice(start, this.position);
         this.advance(); // consume closing quote
-        this.addToken(TokenType.STRING, value);
+        this.addToken(TokenType.STRING, chars.join(''));
     }
 
     private tokenizeVariable(): void {
@@ -162,7 +182,7 @@ export class Tokenizer {
 
     private tokenizeKeywordOrIdentifier(): void {
         const identifier = this.tokenizeIdentifier();
-        
+
         // Check for keywords
         switch (identifier.toLowerCase()) {
             case 'true':
@@ -180,13 +200,30 @@ export class Tokenizer {
             case 'or':
                 this.addToken(TokenType.OR, 'or');
                 break;
-            case 'not':
-                this.addToken(TokenType.NOT, 'not');
-                break;
-            case 'is':
-                // Check if followed by 'not'
+            case 'not': {
+                // Check if followed by 'in' (not in operator) with word boundary
                 this.skipWhitespace();
-                if (this.input.slice(this.position, this.position + 3).toLowerCase() === 'not') {
+                if (this.isLetter(this.peek())) {
+                    const savedPos = this.position;
+                    const nextWord = this.tokenizeIdentifier();
+                    if (nextWord.toLowerCase() === 'in' && !this.isAlphaNumeric(this.peek())) {
+                        this.addToken(TokenType.NOT_IN, 'not in');
+                    } else {
+                        this.position = savedPos; // rewind — not 'not in'
+                        this.addToken(TokenType.NOT, 'not');
+                    }
+                } else {
+                    this.addToken(TokenType.NOT, 'not');
+                }
+                break;
+            }
+            case 'is':
+                // Check if followed by 'not' with a word boundary
+                this.skipWhitespace();
+                if (
+                    this.input.slice(this.position, this.position + 3).toLowerCase() === 'not' &&
+                    !this.isAlphaNumeric(this.input[this.position + 3] ?? '')
+                ) {
                     this.position += 3;
                     this.addToken(TokenType.IS_NOT, 'is not');
                 } else {
@@ -204,6 +241,15 @@ export class Tokenizer {
                 break;
             case 'lte':
                 this.addToken(TokenType.LTE, 'lte');
+                break;
+            case 'in':
+                this.addToken(TokenType.IN, 'in');
+                break;
+            case 'between':
+                this.addToken(TokenType.BETWEEN, 'between');
+                break;
+            case 'like':
+                this.addToken(TokenType.LIKE, 'like');
                 break;
             case 'custom':
                 this.addToken(TokenType.CUSTOM, 'custom');
@@ -240,8 +286,16 @@ export class Tokenizer {
                 this.position += 2;
                 this.addToken(TokenType.OR, '||');
                 return true;
+            case '**':
+                this.position += 2;
+                this.addToken(TokenType.EXPONENT, '**');
+                return true;
+            case '??':
+                this.position += 2;
+                this.addToken(TokenType.NULLISH_COALESCE, '??');
+                return true;
             default:
-                // Check for words like 'AND', 'OR'
+                // Check for words like 'AND', 'OR', keywords
                 if (this.isLetter(twoChar[0])) {
                     this.tokenizeKeywordOrIdentifier();
                     return true;
@@ -293,14 +347,8 @@ export class Tokenizer {
                 this.addToken(TokenType.PLUS, '+');
                 break;
             case '-':
-                // Check if this is a negative number
-                if (!this.isDigit(this.peekNext())) {
-                    this.advance();
-                    this.addToken(TokenType.MINUS, '-');
-                } else {
-                    // This is handled by tokenizeNumber
-                    throw new Error(`Unexpected character '${char}' at position ${this.position}`);
-                }
+                this.advance();
+                this.addToken(TokenType.MINUS, '-');
                 break;
             case '*':
                 this.advance();
@@ -309,6 +357,18 @@ export class Tokenizer {
             case '/':
                 this.advance();
                 this.addToken(TokenType.DIVIDE, '/');
+                break;
+            case '%':
+                this.advance();
+                this.addToken(TokenType.MODULO, '%');
+                break;
+            case '?':
+                this.advance();
+                this.addToken(TokenType.QUESTION, '?');
+                break;
+            case ',':
+                this.advance();
+                this.addToken(TokenType.COMMA, ',');
                 break;
             default:
                 if (this.isLetter(char)) {

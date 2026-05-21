@@ -124,10 +124,18 @@ describe('Web Build Integration', () => {
     expect(global.quis).toBeDefined();
     expect(global.quis.parse).toBeDefined();
     expect(typeof global.quis.parse).toBe('function');
+    expect(global.quis.evaluate).toBeDefined();
+    expect(typeof global.quis.evaluate).toBe('function');
+    expect(global.quis.compile).toBeDefined();
+    expect(typeof global.quis.compile).toBe('function');
     
-    // Test basic functionality works
-    expect(global.quis.parse('true')).toBe(true);
-    expect(global.quis.parse('false')).toBe(false);
-    expect(global.quis.parse('1 < 2')).toBe(true);
+    // parse() returns an AST object; evaluate() returns computed values
+    const ast = global.quis.parse('true');
+    expect(typeof ast).toBe('object');
+    expect(ast.type).toBeDefined();
+
+    expect(global.quis.evaluate('true')).toBe(true);
+    expect(global.quis.evaluate('false')).toBe(false);
+    expect(global.quis.evaluate('1 < 2')).toBe(true);
   });
 });

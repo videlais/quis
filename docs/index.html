@@ -3,435 +3,724 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Interactive web demo of the Quis DSL Parser - a lightweight domain-specific language for data sorting and filtering">
-    <meta name="keywords" content="DSL, parser, data filtering, JavaScript, TypeScript, boolean expressions">
+    <meta name="description" content="Quis DSL Parser — Interactive examples showing compile(), evaluate(), and parse() for data filtering">
+    <meta name="keywords" content="DSL, parser, data filtering, JavaScript, TypeScript, boolean expressions, compile, evaluate">
     <meta name="author" content="Quis DSL Parser">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <title>Quis DSL Parser - Interactive Demo</title>
+    <title>Quis DSL Parser — Examples</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: #1a202c;
+            background: #f7fafc;
+        }
+
+        /* ── Top nav ── */
+        .site-nav {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            height: 56px;
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        .site-nav .brand {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-decoration: none;
+            letter-spacing: .5px;
         }
+        .site-nav a {
+            color: rgba(255,255,255,.85);
+            text-decoration: none;
+            font-size: .9rem;
+        }
+        .site-nav a:hover { color: #fff; }
 
-        .header {
-            text-align: center;
+        /* ── Page hero ── */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            margin-bottom: 40px;
+            text-align: center;
+            padding: 48px 24px 56px;
         }
+        .hero h1 { font-size: 2.4rem; font-weight: 300; margin-bottom: 8px; }
+        .hero p  { font-size: 1.05rem; opacity: .9; max-width: 640px; margin: 0 auto; }
 
-        .header h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            font-weight: 300;
+        /* ── Section tabs ── */
+        .tab-bar {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            background: white;
+            border-bottom: 2px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,.06);
         }
-
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
+        .tab-bar button {
+            padding: 14px 28px;
+            border: none;
+            background: none;
+            font-size: .95rem;
+            font-weight: 500;
+            color: #718096;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: color .15s, border-color .15s;
         }
+        .tab-bar button:hover { color: #667eea; }
+        .tab-bar button.active { color: #667eea; border-bottom-color: #667eea; }
 
-        .demo-section {
+        /* ── Section panels ── */
+        .panel {
+            display: none;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px 64px;
+        }
+        .panel.active { display: block; }
+
+        .panel-header { margin-bottom: 28px; }
+        .panel-header h2 { font-size: 1.6rem; color: #2d3748; margin-bottom: 6px; }
+        .panel-header p  { color: #718096; max-width: 700px; }
+
+        /* ── Expression controls ── */
+        .controls {
             background: white;
             border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.07);
         }
-
-        .demo-section h2 {
-            color: #4a5568;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
+        .controls label {
             display: block;
-            margin-bottom: 8px;
             font-weight: 600;
+            font-size: .85rem;
+            text-transform: uppercase;
+            letter-spacing: .6px;
             color: #4a5568;
+            margin-bottom: 8px;
         }
-
-        .expression-input, .data-input {
-            width: 100%;
-            padding: 12px;
+        .expr-row {
+            display: flex;
+            gap: 10px;
+        }
+        .expr-input {
+            flex: 1;
+            padding: 11px 14px;
             border: 2px solid #e2e8f0;
             border-radius: 8px;
-            font-size: 16px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            transition: border-color 0.2s;
+            font-size: 15px;
+            font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+            transition: border-color .2s;
         }
-
-        .expression-input:focus, .data-input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .data-input {
-            height: 120px;
-            resize: vertical;
-        }
-
-        .button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .expr-input:focus { outline: none; border-color: #667eea; }
+        .btn-run {
+            padding: 11px 22px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            padding: 12px 24px;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+            transition: opacity .15s, transform .15s;
         }
+        .btn-run:hover { opacity: .9; transform: translateY(-1px); }
 
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        .quick-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
         }
-
-        .result {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            white-space: pre-wrap;
+        .quick-filters span {
+            font-size: .8rem;
+            color: #718096;
+            align-self: center;
+            margin-right: 2px;
         }
-
-        .result.success {
-            background: #f0fff4;
-            border: 2px solid #9ae6b4;
-            color: #22543d;
-        }
-
-        .result.error {
-            background: #fff5f5;
-            border: 2px solid #feb2b2;
-            color: #c53030;
-        }
-
-        .examples {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .example {
+        .pill {
+            padding: 5px 12px;
+            border: 1.5px solid #cbd5e0;
+            border-radius: 20px;
+            font-size: .8rem;
+            font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
             background: #f7fafc;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
-        .example h3 {
+            cursor: pointer;
             color: #4a5568;
+            transition: border-color .15s, background .15s;
+        }
+        .pill:hover { border-color: #667eea; background: #ebf4ff; color: #667eea; }
+
+        /* ── Result banner ── */
+        .result-bar {
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: .9rem;
+            display: none;
+        }
+        .result-bar.ok  { background: #f0fff4; border: 1.5px solid #9ae6b4; color: #276749; }
+        .result-bar.err { background: #fff5f5; border: 1.5px solid #feb2b2; color: #c53030; font-family: monospace; }
+
+        /* ── Data table (Example 1) ── */
+        .data-table-wrap {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.07);
+            overflow: hidden;
+        }
+        .data-table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .9rem;
+        }
+        .data-table-wrap thead th {
+            background: #edf2f7;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+            color: #718096;
+            font-weight: 600;
+        }
+        .data-table-wrap tbody tr { border-top: 1px solid #e2e8f0; }
+        .data-table-wrap tbody tr.hidden { display: none; }
+        .data-table-wrap tbody td { padding: 12px 16px; color: #2d3748; vertical-align: middle; }
+        .data-table-wrap tbody tr:hover td { background: #f7fafc; }
+        .badge {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 12px;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+        .badge-green  { background: #c6f6d5; color: #22543d; }
+        .badge-red    { background: #fed7d7; color: #c53030; }
+        .badge-blue   { background: #bee3f8; color: #2a4365; }
+        .badge-purple { background: #e9d8fd; color: #553c9a; }
+        .badge-orange { background: #feebc8; color: #7b341e; }
+
+        /* ── Story cards (Example 2) ── */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 18px;
+        }
+        .story-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.07);
+            border-top: 4px solid #667eea;
+            transition: transform .15s, box-shadow .15s;
+        }
+        .story-card.hidden { display: none; }
+        .story-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+        .story-card.setting-forest   { border-top-color: #48bb78; }
+        .story-card.setting-dungeon  { border-top-color: #9f7aea; }
+        .story-card.setting-city     { border-top-color: #4299e1; }
+        .story-card.setting-tavern   { border-top-color: #ed8936; }
+        .story-card.setting-mountain { border-top-color: #a0aec0; }
+        .story-meta {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
             margin-bottom: 10px;
         }
+        .story-card h3 { font-size: 1rem; margin-bottom: 6px; color: #2d3748; }
+        .story-card p  { font-size: .85rem; color: #718096; margin-bottom: 12px; }
+        .story-stats   { font-size: .8rem; color: #4a5568; display: flex; gap: 14px; flex-wrap: wrap; }
 
-        .example-code {
+        /* ── Recipe cards (Example 3) ── */
+        .recipe-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.07);
+            transition: transform .15s, box-shadow .15s;
+        }
+        .recipe-card.hidden { display: none; }
+        .recipe-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+        .recipe-card h3 { font-size: 1rem; margin-bottom: 8px; color: #2d3748; }
+        .recipe-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .recipe-stats {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            font-size: .82rem;
+            color: #718096;
+            margin-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 10px;
+        }
+        .cuisine-label {
+            font-size: .75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: #718096;
+            margin-bottom: 4px;
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #a0aec0;
+            display: none;
+        }
+        .empty-state p { font-size: 1rem; }
+
+        /* ── Code snippet ── */
+        .code-snippet {
             background: #2d3748;
             color: #e2e8f0;
-            padding: 12px;
-            border-radius: 6px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 14px;
-            margin: 10px 0;
+            border-radius: 8px;
+            padding: 16px 20px;
+            font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+            font-size: .82rem;
+            line-height: 1.7;
+            margin-bottom: 24px;
             overflow-x: auto;
         }
+        .code-snippet .kw  { color: #81e6d9; }
+        .code-snippet .str { color: #fbd38d; }
+        .code-snippet .cmt { color: #68d391; font-style: italic; }
+        .code-snippet .fn  { color: #90cdf4; }
 
-        .example button {
-            background: #4299e1;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-
-        .example button:hover {
-            background: #3182ce;
-        }
-
-        .footer {
+        /* ── Footer ── */
+        footer {
             text-align: center;
-            color: white;
-            margin-top: 40px;
-            opacity: 0.8;
+            padding: 32px;
+            color: #a0aec0;
+            font-size: .88rem;
+            border-top: 1px solid #e2e8f0;
         }
-
-        .footer a {
-            color: white;
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
+        footer a { color: #667eea; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Quis DSL Parser</h1>
-            <p>Interactive demonstration of the lightweight data sorting DSL</p>
+
+<nav class="site-nav">
+    <a href="index.html" class="brand">Quis DSL Examples</a>
+    <a href="https://github.com/videlais/quis" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://npmjs.com/package/quis" target="_blank" rel="noopener">npm</a>
+    <a href="https://github.com/videlais/quis#readme" target="_blank" rel="noopener">Docs</a>
+</nav>
+
+<div class="hero">
+    <h1>Quis DSL Parser Examples</h1>
+    <p>As a data filtering language, Quis provides two core functions, <code style="background:rgba(255,255,255,.2);padding:2px 7px;border-radius:4px;">compile()</code> and <code style="background:rgba(255,255,255,.2);padding:2px 7px;border-radius:4px;">evaluate()</code>, for filtering structured data.</p>
+</div>
+
+<div class="tab-bar">
+    <button class="active" onclick="showPanel('emp', this)">1 · Employee Directory</button>
+    <button onclick="showPanel('story', this)">2 · Story Encounters</button>
+    <button onclick="showPanel('recipe', this)">3 · Recipe Book</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     EXAMPLE 1 — Employee Directory
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="panel-emp" class="panel active">
+    <div class="panel-header">
+        <h2>Filtering Complex Data</h2>
+        <p>
+            A directory of twelve employees with multiple fields.
+            <code>compile()</code> parses the expression once and returns a reusable
+            predicate — each row is then tested by calling that function with the row
+            as its context, with no re-parsing on each iteration.
+        </p>
+    </div>
+
+    <div class="controls">
+        <label>Filter expression</label>
+        <div class="expr-row">
+            <input id="emp-expr" class="expr-input"
+                   value='$department == "Engineering" &amp;&amp; $active == true'>
+            <button class="btn-run" onclick="filterEmployees()">Filter</button>
         </div>
-
-        <div class="demo-section">
-            <h2>🚀 Interactive Demo</h2>
-            <div class="input-group">
-                <label for="expressionInput">DSL Expression:</label>
-                <input type="text" id="expressionInput" class="expression-input" 
-                       placeholder="Enter your DSL expression (e.g., $user.age > 18 && $user.active)" 
-                       value="$user.age > 18 && $user.active">
-            </div>
-            
-            <div class="input-group">
-                <label for="dataInput">Data Context (JSON):</label>
-                <textarea id="dataInput" class="data-input" 
-                          placeholder="Enter JSON data for variable resolution">{
-  "user": {
-    "name": "Alice",
-    "age": 25,
-    "active": true,
-    "level": 5
-  },
-  "config": {
-    "debug": false,
-    "maxRetries": 3
-  }
-}</textarea>
-            </div>
-            
-            <button class="button" onclick="executeExpression()">Execute Expression</button>
-            
-            <div id="result" class="result" style="display: none;"></div>
-        </div>
-
-        <div class="demo-section">
-            <h2>📚 Example Expressions</h2>
-            <div class="examples">
-                <div class="example">
-                    <h3>Boolean Logic</h3>
-                    <div class="example-code">true && false</div>
-                    <button onclick="runExample('true && false', '{}')">Try it</button>
-                </div>
-
-                <div class="example">
-                    <h3>Numeric Comparison</h3>
-                    <div class="example-code">$user.age >= 21</div>
-                    <button onclick="runExample('$user.age >= 21', JSON.stringify({user: {age: 25}}, null, 2))">Try it</button>
-                </div>
-
-                <div class="example">
-                    <h3>String Equality</h3>
-                    <div class="example-code">$user.name == "Alice"</div>
-                    <button onclick="runExample('$user.name == &quot;Alice&quot;', JSON.stringify({user: {name: 'Alice'}}, null, 2))">Try it</button>
-                </div>
-
-                <div class="example">
-                    <h3>Complex Expression</h3>
-                    <div class="example-code">($user.level > 3 && $user.active) || $user.admin</div>
-                    <button onclick="runExample('($user.level > 3 && $user.active) || $user.admin', JSON.stringify({user: {level: 5, active: true, admin: false}}, null, 2))">Try it</button>
-                </div>
-
-                <div class="example">
-                    <h3>Shorthand Operators</h3>
-                    <div class="example-code">$score gt 100 and $lives gte 1</div>
-                    <button onclick="runExample('$score gt 100 and $lives gte 1', JSON.stringify({score: 150, lives: 3}, null, 2))">Try it</button>
-                </div>
-
-                <div class="example">
-                    <h3>Negation</h3>
-                    <div class="example-code">!$config.debug && $config.production</div>
-                    <button onclick="runExample('!$config.debug && $config.production', JSON.stringify({config: {debug: false, production: true}}, null, 2))">Try it</button>
-                </div>
-
-                <div class="example">
-                    <h3>Custom Conditions</h3>
-                    <div class="example-code">$text custom:contains "hello"</div>
-                    <button onclick="runCustomConditionExample()">Try it</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="demo-section">
-            <h2>📖 Supported Operations</h2>
-            <div class="examples">
-                <div class="example">
-                    <h3>Comparison Operators</h3>
-                    <div class="example-code">==, !=, >, <, >=, <=
-is, is not, gt, lt, gte, lte</div>
-                </div>
-
-                <div class="example">
-                    <h3>Boolean Operators</h3>
-                    <div class="example-code">&&, ||, !
-AND, OR, and, or</div>
-                </div>
-
-                <div class="example">
-                    <h3>Data Types</h3>
-                    <div class="example-code">Numbers: 42, 3.14
-Strings: "hello", 'world'
-Booleans: true, false
-Null: null</div>
-                </div>
-
-                <div class="example">
-                    <h3>Variable Access</h3>
-                    <div class="example-code">$variableName
-$object.property
-$nested.deep.value</div>
-                </div>
-
-                <div class="example">
-                    <h3>Custom Conditions</h3>
-                    <div class="example-code">$value custom:conditionName $expected
-
-// Add custom condition
-quis.addCustomCondition('contains', 
-  (value, expected) => 
-    String(value).includes(String(expected))
-);</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="footer">
-            <p>
-                Built with ❤️ | 
-                <a href="https://github.com/videlais/quis" target="_blank">View on GitHub</a> | 
-                <a href="https://npmjs.com/package/quis" target="_blank">NPM Package</a>
-            </p>
+        <div class="quick-filters">
+            <span>Try:</span>
+            <button class="pill" onclick="setExpr('emp-expr', '$department == &quot;Engineering&quot; &amp;&amp; $active == true')">Engineering (active)</button>
+            <button class="pill" onclick="setExpr('emp-expr', '$salary >= 90000 &amp;&amp; $active == true')">High earners</button>
+            <button class="pill" onclick="setExpr('emp-expr', '$age &lt; 30 &amp;&amp; $active == true')">Under 30</button>
+            <button class="pill" onclick="setExpr('emp-expr', '$years >= 5')">Veterans (5+ yrs)</button>
+            <button class="pill" onclick="setExpr('emp-expr', '$department == &quot;Sales&quot; || $department == &quot;Marketing&quot;')">Sales or Marketing</button>
+            <button class="pill" onclick="setExpr('emp-expr', 'true')">Show all</button>
         </div>
     </div>
 
-    <!-- Load the Quis DSL Parser -->
-    <script src="quis.min.js"></script>
-    
-    <script>
-        // Initialize the demo
-        function executeExpression() {
-            const expressionInput = document.getElementById('expressionInput');
-            const dataInput = document.getElementById('dataInput');
-            const resultDiv = document.getElementById('result');
-            
-            const expression = expressionInput.value.trim();
-            const dataText = dataInput.value.trim();
-            
-            if (!expression) {
-                showResult('Please enter a DSL expression', 'error');
-                return;
-            }
-            
-            try {
-                // Parse the JSON data
-                let data = {};
-                if (dataText) {
-                    data = JSON.parse(dataText);
-                }
-                
-                // Create values callback function
-                const values = (variableName) => {
-                    return data[variableName] || null;
-                };
-                
-                // Execute the expression
-                const result = window.quis.parse(expression, { values });
-                
-                // Show the result
-                showResult(`Expression: ${expression}\nResult: ${JSON.stringify(result, null, 2)}\nType: ${typeof result}`, 'success');
-                
-            } catch (error) {
-                let errorMessage = `Error: ${error.message}`;
-                
-                if (error.expected && error.found !== undefined) {
-                    errorMessage += `\nExpected: ${error.expected.map(e => e.description || e.type).join(', ')}`;
-                    errorMessage += `\nFound: ${error.found}`;
-                    
-                    if (error.location) {
-                        errorMessage += `\nLocation: Line ${error.location.start.line}, Column ${error.location.start.column}`;
-                    }
-                }
-                
-                showResult(errorMessage, 'error');
-            }
-        }
-        
-        function runExample(expression, data) {
-            document.getElementById('expressionInput').value = expression;
-            document.getElementById('dataInput').value = data;
-            executeExpression();
-        }
-        
-        function showResult(message, type) {
-            const resultDiv = document.getElementById('result');
-            resultDiv.textContent = message;
-            resultDiv.className = `result ${type}`;
-            resultDiv.style.display = 'block';
-            
-            // Scroll to result
-            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-        
-        function runCustomConditionExample() {
-            // Add a custom condition for string contains
-            window.quis.addCustomCondition('contains', (value, expected) => {
-                return String(value).includes(String(expected));
-            });
-            
-            // Set up the example
-            const expression = '$text custom:contains "hello"';
-            const data = JSON.stringify({
-                text: 'hello world from custom conditions!'
-            }, null, 2);
-            
-            runExample(expression, data);
-            
-            // Show additional info about custom conditions
-            setTimeout(() => {
-                const conditions = window.quis.getCustomConditions();
-                const additionalInfo = `\n\nℹ️ Custom Conditions Demo:\n• Added "contains" condition\n• Available conditions: ${Object.keys(conditions).join(', ')}\n• Syntax: $value custom:conditionName $expected`;
-                
-                const resultDiv = document.getElementById('result');
-                if (resultDiv.style.display !== 'none') {
-                    resultDiv.textContent += additionalInfo;
-                }
-            }, 100);
-        }
-        
-        // Allow Enter key to execute
-        document.getElementById('expressionInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                executeExpression();
-            }
-        });
-        
-        // Execute the default expression on load
-        window.addEventListener('load', function() {
-            executeExpression();
-        });
-    </script>
+    <div id="emp-result" class="result-bar"></div>
+
+    <div class="data-table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Department</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Salary</th>
+                    <th>Years</th>
+                </tr>
+            </thead>
+            <tbody id="emp-tbody"></tbody>
+        </table>
+        <div id="emp-empty" class="empty-state">
+            <p>No employees match that expression.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     EXAMPLE 2 — Story Encounter Library
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="panel-story" class="panel">
+    <div class="panel-header">
+        <h2>Narrative Sorting</h2>
+        <p>
+            A library of ten tabletop RPG encounters, each tagged with a setting, type,
+            difficulty, and reward tier. Use a Quis expression to surface exactly the
+            encounters you need — forest encounters with treasure, easy starter quests,
+            or high-reward boss fights above a certain level.
+        </p>
+    </div>
+
+    <div class="controls">
+        <label>Filter expression</label>
+        <div class="expr-row">
+            <input id="story-expr" class="expr-input" value='$setting == "forest"'>
+            <button class="btn-run" onclick="filterStories()">Filter</button>
+        </div>
+        <div class="quick-filters">
+            <span>Try:</span>
+            <button class="pill" onclick="setExpr('story-expr', '$setting == &quot;forest&quot;')">Forest encounters</button>
+            <button class="pill" onclick="setExpr('story-expr', '$difficulty == &quot;easy&quot; &amp;&amp; $hasTreasure == true')">Easy loot</button>
+            <button class="pill" onclick="setExpr('story-expr', '$hasBoss == true')">Boss fights</button>
+            <button class="pill" onclick="setExpr('story-expr', '$levelRequired &lt;= 2')">Starter encounters</button>
+            <button class="pill" onclick="setExpr('story-expr', '$type == &quot;social&quot; || $type == &quot;puzzle&quot;')">No combat</button>
+            <button class="pill" onclick="setExpr('story-expr', '$rewardGold >= 50 &amp;&amp; $difficulty != &quot;easy&quot;')">High reward</button>
+            <button class="pill" onclick="setExpr('story-expr', 'true')">Show all</button>
+        </div>
+    </div>
+
+    <div id="story-result" class="result-bar"></div>
+
+    <div id="story-grid" class="card-grid"></div>
+    <div id="story-empty" class="empty-state">
+        <p>No encounters match that expression.</p>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     EXAMPLE 3 — Recipe Book
+════════════════════════════════════════════════════════════════════════════ -->
+<div id="panel-recipe" class="panel">
+    <div class="panel-header">
+        <h2>Recipe Book Search</h2>
+        <p>
+            Twelve recipes across six cuisines. Express dietary requirements, time
+            budgets, and calorie targets as DSL expressions instead of building a
+            multi-checkbox UI — and combine any criteria ad-hoc without new UI code.
+        </p>
+    </div>
+
+    <div class="controls">
+        <label>Filter expression</label>
+        <div class="expr-row">
+            <input id="recipe-expr" class="expr-input"
+                   value='$vegetarian == true &amp;&amp; ($prepTime + $cookTime) &lt;= 40'>
+            <button class="btn-run" onclick="filterRecipes()">Filter</button>
+        </div>
+        <div class="quick-filters">
+            <span>Try:</span>
+            <button class="pill" onclick="setExpr('recipe-expr', '$vegetarian == true &amp;&amp; ($prepTime + $cookTime) &lt;= 40')">Quick veg</button>
+            <button class="pill" onclick="setExpr('recipe-expr', '$vegan == true &amp;&amp; $glutenFree == true')">Vegan &amp; GF</button>
+            <button class="pill" onclick="setExpr('recipe-expr', '$difficulty == &quot;easy&quot; &amp;&amp; $calories &lt; 400')">Easy &amp; light</button>
+            <button class="pill" onclick="setExpr('recipe-expr', '$cuisine == &quot;japanese&quot;')">Japanese</button>
+            <button class="pill" onclick="setExpr('recipe-expr', '$prepTime &lt;= 15')">Prep ≤ 15 min</button>
+            <button class="pill" onclick="setExpr('recipe-expr', '$difficulty == &quot;hard&quot;')">Weekend projects</button>
+            <button class="pill" onclick="setExpr('recipe-expr', 'true')">Show all</button>
+        </div>
+    </div>
+
+    <div id="recipe-result" class="result-bar"></div>
+
+    <div id="recipe-grid" class="card-grid"></div>
+    <div id="recipe-empty" class="empty-state">
+        <p>No recipes match that expression.</p>
+    </div>
+</div>
+
+<footer>
+    <p>
+        <a href="https://github.com/videlais/quis" target="_blank" rel="noopener">View on GitHub</a>
+        &nbsp;·&nbsp;
+        <a href="https://npmjs.com/package/quis" target="_blank" rel="noopener">npm package</a>
+    </p>
+</footer>
+
+<script src="quis.min.js"></script>
+<script>
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+const EMPLOYEES = [
+    { name: 'Alice Chen',      age: 34, department: 'Engineering',  role: 'Senior Engineer',    active: true,  salary: 120000, years: 6  },
+    { name: 'Bob Martinez',    age: 28, department: 'Engineering',  role: 'Engineer',           active: true,  salary: 86000,  years: 2  },
+    { name: 'Carol White',     age: 41, department: 'Marketing',    role: 'Director',           active: true,  salary: 95000,  years: 9  },
+    { name: 'David Kim',       age: 25, department: 'Engineering',  role: 'Intern',             active: false, salary: 45000,  years: 1  },
+    { name: 'Eve Johnson',     age: 37, department: 'Sales',        role: 'Account Manager',    active: true,  salary: 85000,  years: 5  },
+    { name: 'Frank Lee',       age: 52, department: 'HR',           role: 'HR Manager',         active: true,  salary: 88000,  years: 15 },
+    { name: 'Grace Taylor',    age: 29, department: 'Engineering',  role: 'Engineer',           active: true,  salary: 93000,  years: 3  },
+    { name: 'Henry Brown',     age: 45, department: 'Sales',        role: 'Sales Director',     active: false, salary: 110000, years: 12 },
+    { name: 'Iris Davis',      age: 31, department: 'Marketing',    role: 'Content Strategist', active: true,  salary: 68000,  years: 4  },
+    { name: 'Jack Wilson',     age: 26, department: 'Engineering',  role: 'Engineer',           active: true,  salary: 90000,  years: 1  },
+    { name: 'Kate Moore',      age: 38, department: 'HR',           role: 'Recruiter',          active: true,  salary: 62000,  years: 7  },
+    { name: 'Liam Anderson',   age: 33, department: 'Sales',        role: 'Account Manager',    active: true,  salary: 78000,  years: 4  }
+];
+
+const ENCOUNTERS = [
+    { title: 'The Whispering Oak',     setting: 'forest',   type: 'exploration', difficulty: 'easy',   levelRequired: 1, rewardGold: 15,  hasBoss: false, hasTreasure: true,  description: 'Ancient trees murmur forgotten secrets. A hidden path leads deeper in.' },
+    { title: 'Goblin Ambush',          setting: 'forest',   type: 'combat',      difficulty: 'easy',   levelRequired: 1, rewardGold: 20,  hasBoss: false, hasTreasure: false, description: 'A band of goblins springs from the underbrush, demanding toll.' },
+    { title: 'The Lost Cartographer',  setting: 'forest',   type: 'social',      difficulty: 'medium', levelRequired: 2, rewardGold: 30,  hasBoss: false, hasTreasure: true,  description: 'A wounded explorer clutches a map of ruins and needs an escort out.' },
+    { title: 'Dungeon of Echoes',      setting: 'dungeon',  type: 'puzzle',      difficulty: 'medium', levelRequired: 3, rewardGold: 55,  hasBoss: false, hasTreasure: true,  description: 'Sound-activated traps fill every chamber. Silence is the only key.' },
+    { title: "The Warden's Keep",      setting: 'dungeon',  type: 'combat',      difficulty: 'hard',   levelRequired: 5, rewardGold: 120, hasBoss: true,  hasTreasure: true,  description: 'An undead warden patrols a vault sealed for three centuries.' },
+    { title: 'City Gate Negotiations', setting: 'city',     type: 'social',      difficulty: 'easy',   levelRequired: 1, rewardGold: 10,  hasBoss: false, hasTreasure: false, description: 'Guards demand a bribe. Barter, bluff, or pay your way inside.' },
+    { title: "The Alchemist's Fire",   setting: 'city',     type: 'puzzle',      difficulty: 'medium', levelRequired: 3, rewardGold: 45,  hasBoss: false, hasTreasure: true,  description: 'A lab accident threatens a city block. Identify the reagent in time.' },
+    { title: 'Tavern Brawl',           setting: 'tavern',   type: 'combat',      difficulty: 'easy',   levelRequired: 1, rewardGold: 5,   hasBoss: false, hasTreasure: false, description: "Someone spilled someone's ale. Now everyone is involved." },
+    { title: 'The Informant',          setting: 'tavern',   type: 'social',      difficulty: 'medium', levelRequired: 2, rewardGold: 25,  hasBoss: false, hasTreasure: false, description: 'A hooded figure claims to know who hired the assassin.' },
+    { title: 'Mountain Pass Ambush',   setting: 'mountain', type: 'combat',      difficulty: 'hard',   levelRequired: 4, rewardGold: 90,  hasBoss: true,  hasTreasure: true,  description: 'Bandits have blocked the only pass. Their leader is no ordinary thug.' }
+];
+
+const RECIPES = [
+    { name: 'Spaghetti Carbonara', cuisine: 'italian',        prepTime: 20,  cookTime: 15,  difficulty: 'easy',   servings: 4, vegetarian: false, vegan: false, glutenFree: false, calories: 480 },
+    { name: 'Pad Thai',            cuisine: 'thai',           prepTime: 25,  cookTime: 20,  difficulty: 'medium', servings: 2, vegetarian: false, vegan: false, glutenFree: true,  calories: 520 },
+    { name: 'Margherita Pizza',    cuisine: 'italian',        prepTime: 30,  cookTime: 12,  difficulty: 'medium', servings: 4, vegetarian: true,  vegan: false, glutenFree: false, calories: 290 },
+    { name: 'Chickpea Curry',      cuisine: 'indian',         prepTime: 15,  cookTime: 30,  difficulty: 'easy',   servings: 4, vegetarian: true,  vegan: true,  glutenFree: true,  calories: 380 },
+    { name: 'Beef Tacos',          cuisine: 'mexican',        prepTime: 20,  cookTime: 15,  difficulty: 'easy',   servings: 3, vegetarian: false, vegan: false, glutenFree: true,  calories: 450 },
+    { name: 'Croissant',           cuisine: 'french',         prepTime: 120, cookTime: 20,  difficulty: 'hard',   servings: 8, vegetarian: true,  vegan: false, glutenFree: false, calories: 270 },
+    { name: 'Sushi Rolls',         cuisine: 'japanese',       prepTime: 45,  cookTime: 5,   difficulty: 'hard',   servings: 4, vegetarian: false, vegan: false, glutenFree: true,  calories: 310 },
+    { name: 'Greek Salad',         cuisine: 'greek',          prepTime: 10,  cookTime: 0,   difficulty: 'easy',   servings: 2, vegetarian: true,  vegan: false, glutenFree: true,  calories: 220 },
+    { name: 'Black Bean Soup',     cuisine: 'mexican',        prepTime: 15,  cookTime: 25,  difficulty: 'easy',   servings: 6, vegetarian: true,  vegan: true,  glutenFree: true,  calories: 240 },
+    { name: 'Ramen',               cuisine: 'japanese',       prepTime: 30,  cookTime: 120, difficulty: 'hard',   servings: 2, vegetarian: false, vegan: false, glutenFree: false, calories: 550 },
+    { name: 'Shakshuka',           cuisine: 'middle-eastern', prepTime: 10,  cookTime: 20,  difficulty: 'easy',   servings: 2, vegetarian: true,  vegan: false, glutenFree: true,  calories: 320 },
+    { name: 'Falafel Wrap',        cuisine: 'middle-eastern', prepTime: 30,  cookTime: 15,  difficulty: 'medium', servings: 4, vegetarian: true,  vegan: true,  glutenFree: false, calories: 420 }
+];
+
+// ─── Shared helpers ───────────────────────────────────────────────────────────
+
+function setExpr(inputId, expr) {
+    document.getElementById(inputId).value = expr;
+    if (inputId === 'emp-expr')    filterEmployees();
+    if (inputId === 'story-expr')  filterStories();
+    if (inputId === 'recipe-expr') filterRecipes();
+}
+
+function showBanner(id, matched, total, errMsg) {
+    const el = document.getElementById(id);
+    if (errMsg) {
+        el.className = 'result-bar err';
+        el.textContent = '\u26a0 ' + errMsg;
+    } else {
+        el.className = 'result-bar ok';
+        el.textContent = '\u2713 ' + matched + ' of ' + total + ' matched';
+    }
+    el.style.display = 'block';
+}
+
+function showPanel(key, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + key).classList.add('active');
+    btn.classList.add('active');
+}
+
+// ─── Example 1: Employee Directory ───────────────────────────────────────────
+
+function buildEmployeeTable() {
+    const tbody = document.getElementById('emp-tbody');
+    EMPLOYEES.forEach(function(emp) {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td><strong>' + emp.name + '</strong></td>' +
+            '<td>' + emp.age + '</td>' +
+            '<td><span class="badge badge-blue">' + emp.department + '</span></td>' +
+            '<td>' + emp.role + '</td>' +
+            '<td><span class="badge ' + (emp.active ? 'badge-green' : 'badge-red') + '">' + (emp.active ? 'Active' : 'Inactive') + '</span></td>' +
+            '<td>$' + emp.salary.toLocaleString() + '</td>' +
+            '<td>' + emp.years + ' yr' + (emp.years !== 1 ? 's' : '') + '</td>';
+        tbody.appendChild(tr);
+    });
+}
+
+function filterEmployees() {
+    const expr = document.getElementById('emp-expr').value.trim();
+    if (!expr) return;
+    var predicate;
+    try {
+        predicate = window.quis.compile(expr);
+    } catch (e) {
+        showBanner('emp-result', 0, EMPLOYEES.length, e.message);
+        return;
+    }
+    var matched = 0;
+    var rows = document.querySelectorAll('#emp-tbody tr');
+    EMPLOYEES.forEach(function(emp, i) {
+        var pass = false;
+        try { pass = !!predicate(emp); } catch (e) { /* treat as no-match */ }
+        rows[i].classList.toggle('hidden', !pass);
+        if (pass) matched++;
+    });
+    document.getElementById('emp-empty').style.display = matched === 0 ? 'block' : 'none';
+    showBanner('emp-result', matched, EMPLOYEES.length, null);
+}
+
+// ─── Example 2: Story Encounters ─────────────────────────────────────────────
+
+var SETTING_ICON = { forest: '\uD83C\uDF32', dungeon: '\u{1F480}', city: '\uD83C\uDFD9', tavern: '\uD83C\uDF7A', mountain: '\u26F0' };
+var TYPE_BADGE   = { combat: 'badge-red', social: 'badge-blue', puzzle: 'badge-purple', exploration: 'badge-green' };
+var DIFF_BADGE   = { easy: 'badge-green', medium: 'badge-orange', hard: 'badge-red' };
+
+function buildStoryCards() {
+    var grid = document.getElementById('story-grid');
+    ENCOUNTERS.forEach(function(enc) {
+        var card = document.createElement('div');
+        card.className = 'story-card setting-' + enc.setting;
+        var bossBadge      = enc.hasBoss      ? '<span class="badge badge-red">boss</span>'       : '';
+        var treasureBadge  = enc.hasTreasure  ? '<span class="badge badge-purple">treasure</span>' : '';
+        card.innerHTML =
+            '<div class="story-meta">' +
+                '<span class="badge ' + TYPE_BADGE[enc.type] + '">' + enc.type + '</span>' +
+                '<span class="badge ' + DIFF_BADGE[enc.difficulty] + '">' + enc.difficulty + '</span>' +
+                bossBadge + treasureBadge +
+            '</div>' +
+            '<h3>' + (SETTING_ICON[enc.setting] || '\uD83D\uDCCD') + ' ' + enc.title + '</h3>' +
+            '<p>' + enc.description + '</p>' +
+            '<div class="story-stats">' +
+                '<span>Setting: <strong>' + enc.setting + '</strong></span>' +
+                '<span>Level: <strong>' + enc.levelRequired + '</strong></span>' +
+                '<span>Gold: <strong>' + enc.rewardGold + '</strong></span>' +
+            '</div>';
+        grid.appendChild(card);
+    });
+}
+
+function filterStories() {
+    var expr = document.getElementById('story-expr').value.trim();
+    if (!expr) return;
+    var predicate;
+    try {
+        predicate = window.quis.compile(expr);
+    } catch (e) {
+        showBanner('story-result', 0, ENCOUNTERS.length, e.message);
+        return;
+    }
+    var matched = 0;
+    var cards = document.querySelectorAll('#story-grid .story-card');
+    ENCOUNTERS.forEach(function(enc, i) {
+        var pass = false;
+        try { pass = !!predicate(enc); } catch (e) { /* no-match */ }
+        cards[i].classList.toggle('hidden', !pass);
+        if (pass) matched++;
+    });
+    document.getElementById('story-empty').style.display = matched === 0 ? 'block' : 'none';
+    showBanner('story-result', matched, ENCOUNTERS.length, null);
+}
+
+// ─── Example 3: Recipe Book ───────────────────────────────────────────────────
+
+var CUISINE_EMOJI = {
+    italian: '\uD83C\uDDEE\uD83C\uDDF9',
+    thai: '\uD83C\uDDF9\uD83C\uDDED',
+    indian: '\uD83C\uDDEE\uD83C\uDDF3',
+    mexican: '\uD83C\uDDF2\uD83C\uDDFD',
+    french: '\uD83C\uDDEB\uD83C\uDDF7',
+    japanese: '\uD83C\uDDEF\uD83C\uDDF5',
+    greek: '\uD83C\uDDEC\uD83C\uDDF7',
+    'middle-eastern': '\uD83E\uDDC6'
+};
+
+function buildRecipeCards() {
+    var grid = document.getElementById('recipe-grid');
+    RECIPES.forEach(function(r) {
+        var card = document.createElement('div');
+        card.className = 'recipe-card';
+        var vegBadge  = r.vegetarian ? '<span class="badge badge-green">vegetarian</span>' : '';
+        var veganBadge = r.vegan      ? '<span class="badge badge-green">vegan</span>'       : '';
+        var gfBadge   = r.glutenFree  ? '<span class="badge badge-blue">gluten-free</span>'  : '';
+        var totalTime = r.prepTime + r.cookTime;
+        card.innerHTML =
+            '<div class="cuisine-label">' + (CUISINE_EMOJI[r.cuisine] || '\uD83C\uDF74') + ' ' + r.cuisine + '</div>' +
+            '<h3>' + r.name + '</h3>' +
+            '<div class="recipe-meta">' +
+                '<span class="badge ' + DIFF_BADGE[r.difficulty] + '">' + r.difficulty + '</span>' +
+                vegBadge + veganBadge + gfBadge +
+            '</div>' +
+            '<div class="recipe-stats">' +
+                '<span>\u23F1 Prep: ' + r.prepTime + ' min</span>' +
+                '<span>\uD83D\uDD25 Cook: ' + r.cookTime + ' min</span>' +
+                '<span>\u23F2 Total: ' + totalTime + ' min</span>' +
+                '<span>\uD83C\uDF7D Serves ' + r.servings + '</span>' +
+                '<span>' + r.calories + ' kcal</span>' +
+            '</div>';
+        grid.appendChild(card);
+    });
+}
+
+function filterRecipes() {
+    var expr = document.getElementById('recipe-expr').value.trim();
+    if (!expr) return;
+    var predicate;
+    try {
+        predicate = window.quis.compile(expr);
+    } catch (e) {
+        showBanner('recipe-result', 0, RECIPES.length, e.message);
+        return;
+    }
+    var matched = 0;
+    var cards = document.querySelectorAll('#recipe-grid .recipe-card');
+    RECIPES.forEach(function(r, i) {
+        var pass = false;
+        try { pass = !!predicate(r); } catch (e) { /* no-match */ }
+        cards[i].classList.toggle('hidden', !pass);
+        if (pass) matched++;
+    });
+    document.getElementById('recipe-empty').style.display = matched === 0 ? 'block' : 'none';
+    showBanner('recipe-result', matched, RECIPES.length, null);
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+buildEmployeeTable();
+buildStoryCards();
+buildRecipeCards();
+
+filterEmployees();
+filterStories();
+filterRecipes();
+
+document.querySelectorAll('.expr-input').forEach(function(input) {
+    input.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter') return;
+        if (input.id === 'emp-expr')    filterEmployees();
+        if (input.id === 'story-expr')  filterStories();
+        if (input.id === 'recipe-expr') filterRecipes();
+    });
+});
+</script>
 </body>
 </html>
