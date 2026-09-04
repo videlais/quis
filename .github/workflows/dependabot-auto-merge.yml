@@ -1,4 +1,4 @@
-# Automatically approves and merges Dependabot pull requests that are
+# Automatically enables auto-merge for Dependabot pull requests that are
 # minor or patch version updates, once required status checks pass.
 # Major version updates are left for manual review.
 name: Dependabot auto-merge
